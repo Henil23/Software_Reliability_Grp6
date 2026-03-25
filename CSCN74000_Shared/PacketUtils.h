@@ -55,5 +55,5 @@ namespace Shared
             packet.UpdatePayloadSize();
             return packet;
         }
-    };
+    };  
 }
