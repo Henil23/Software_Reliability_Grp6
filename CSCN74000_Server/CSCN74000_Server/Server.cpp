@@ -6,6 +6,7 @@
 #include "ServerState.h"
 #include "Constants.h"
 #include "Serialization.h"
+#include "PacketUtils.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -251,6 +252,32 @@ bool Server::SendPacket(const Shared::Packet& packet)
     return SendAll(reinterpret_cast<const char*>(serializedPacket.data()), static_cast<int>(serializedPacket.size()));
 }
 
+bool Server::IsVerified() const
+{
+    return m_state == Shared::ServerState::VERIFIED;
+}
+
+Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
+{
+    std::string token = Shared::Serialization::ExtractTextPayload(packet.payload);
+
+    if (token == Shared::EXPECTED_VERIFICATION_TOKEN)
+    {
+        SetState(Shared::ServerState::VERIFIED);
+
+        return Shared::PacketUtils::CreateTextPacket(
+            Shared::PacketType::VERIFY_RESPONSE,
+            "Verification Successful",
+            Shared::StatusCode::SUCCESS
+        );
+    }
+
+    return Shared::PacketUtils::CreateTextPacket(
+        Shared::PacketType::VERIFY_RESPONSE,
+        "Verification Failed",
+        Shared::StatusCode::AUTH_FAILED
+    );
+}
 void Server::CloseClientSocket()
 {
     if (m_clientSocket != INVALID_SOCKET)

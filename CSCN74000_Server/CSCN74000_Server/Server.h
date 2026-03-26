@@ -41,6 +41,11 @@ private:
     void SetState(Shared::ServerState newState);
     std::string GetStateString() const;
 
+    Shared::Packet HandleVerification(const Shared::Packet& packet);
+    Shared::Packet HandleSensorRequest(const Shared::Packet& packet);
+
+    bool IsVerified() const;
+
 private:
     WSADATA m_wsaData;
     SOCKET m_listenSocket;
