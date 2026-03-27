@@ -109,6 +109,18 @@ int main()
             Shared::Packet response;
             ReceivePacket(sock, response);
 
+            if (response.header.status != Shared::StatusCode::SUCCESS)
+            {
+                std::cout << "Error: ";
+
+                if (response.header.status == Shared::StatusCode::NOT_VERIFIED)
+                    std::cout << "Not Verified\n";
+                else
+                    std::cout << "Request Failed\n";
+
+                continue;  
+            }
+
             std::vector<Shared::SensorData> sensors;
             Shared::Serialization::DeserializeSensorDataList(response.payload, sensors);
 

@@ -100,13 +100,25 @@ void Server::Run()
             << ", PayloadSize=" << packet.header.payloadSize
             << ", State=" << GetStateString() << "\n";
 
-        // Temporary echo response for connection testing
         Shared::Packet response;
-        response.header.type = Shared::PacketType::ACK;
-        response.header.timestamp = Shared::Serialization::GetCurrentTimestamp();
-        response.header.payloadSize = 0;
-        response.header.sensorCount = 0;
-        response.header.status = Shared::StatusCode::SUCCESS;
+
+        switch (packet.header.type)
+        {
+        case Shared::PacketType::VERIFY_REQUEST:
+            response = HandleVerification(packet);
+            break;
+
+        case Shared::PacketType::SENSOR_REQUEST:
+            response = HandleSensorRequest(packet);
+            break;
+
+        default:
+            response = Shared::PacketUtils::CreateSimplePacket(
+                Shared::PacketType::ERROR_PACKET,
+                Shared::StatusCode::INVALID_COMMAND
+            );
+            break;
+        }
 
         if (!SendPacket(response))
         {
@@ -117,7 +129,7 @@ void Server::Run()
 
     CloseClientSocket();
     SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
-}
+}   
 
 bool Server::InitializeWinsock()
 {
@@ -265,6 +277,8 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
     {
         SetState(Shared::ServerState::VERIFIED);
 
+        std::cout << "State changed to VERIFIED\n";
+
         return Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::VERIFY_RESPONSE,
             "Verification Successful",
@@ -278,6 +292,30 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
         Shared::StatusCode::AUTH_FAILED
     );
 }
+
+Shared::Packet Server::HandleSensorRequest(const Shared::Packet& packet)
+{
+    if (!IsVerified())
+    {
+        return Shared::PacketUtils::CreateSimplePacket(
+            Shared::PacketType::ERROR_PACKET,
+            Shared::StatusCode::NOT_VERIFIED
+        );
+    }
+
+    SetState(Shared::ServerState::SENSOR_DATA);
+
+    std::vector<Shared::SensorData> sensors;
+
+    auto timestamp = Shared::Serialization::GetCurrentTimestamp();
+
+    sensors.emplace_back("Altitude", 35000, "ft", timestamp);
+    sensors.emplace_back("Speed", 450, "knots", timestamp);
+    sensors.emplace_back("Temperature", -50, "C", timestamp);
+
+    return Shared::PacketUtils::CreateSensorResponsePacket(sensors);
+}
+
 void Server::CloseClientSocket()
 {
     if (m_clientSocket != INVALID_SOCKET)
