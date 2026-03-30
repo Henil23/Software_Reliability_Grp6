@@ -1,13 +1,59 @@
 #include "Server.h"
 
+#include <fstream>
 #include <iostream>
+#include <random>
+#include <vector>
 
-#include "Packet.h"
-#include "ServerState.h"
 #include "Constants.h"
 #include "Serialization.h"
+#include "PacketUtils.h"
+#include "Logger.h"
 
 #pragma comment(lib, "Ws2_32.lib")
+
+namespace
+{
+    double RandomInRange(double minValue, double maxValue)
+    {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dist(minValue, maxValue);
+        return dist(gen);
+    }
+
+    std::vector<Shared::SensorData> GenerateCurrentSensors()
+    {
+        std::vector<Shared::SensorData> sensors;
+        const std::uint64_t timestamp = Shared::Serialization::GetCurrentTimestamp();
+
+        const double altitude = RandomInRange(33000.0, 37000.0);
+        const double speed = RandomInRange(420.0, 480.0);
+        const double temperature = RandomInRange(-58.0, -42.0);
+        const double fuelLevel = RandomInRange(35.0, 95.0);
+        const double engineRpm = RandomInRange(7800.0, 9100.0);
+        const double oilPressure = RandomInRange(45.0, 70.0);
+        const double cabinPressure = RandomInRange(10.2, 11.4);
+        const double heading = RandomInRange(0.0, 359.9);
+        const double pitch = RandomInRange(-6.0, 6.0);
+        const double roll = RandomInRange(-12.0, 12.0);
+        const double verticalSpeed = RandomInRange(-1800.0, 1800.0);
+
+        sensors.emplace_back("Altitude", altitude, "ft", timestamp);
+        sensors.emplace_back("Speed", speed, "knots", timestamp);
+        sensors.emplace_back("Temperature", temperature, "C", timestamp);
+        sensors.emplace_back("Fuel Level", fuelLevel, "%", timestamp);
+        sensors.emplace_back("Engine RPM", engineRpm, "rpm", timestamp);
+        sensors.emplace_back("Oil Pressure", oilPressure, "psi", timestamp);
+        sensors.emplace_back("Cabin Pressure", cabinPressure, "psi", timestamp);
+        sensors.emplace_back("Heading", heading, "deg", timestamp);
+        sensors.emplace_back("Pitch", pitch, "deg", timestamp);
+        sensors.emplace_back("Roll", roll, "deg", timestamp);
+        sensors.emplace_back("Vertical Speed", verticalSpeed, "fpm", timestamp);
+
+        return sensors;
+    }
+}
 
 Server::Server()
     : m_listenSocket(INVALID_SOCKET),
@@ -56,6 +102,11 @@ bool Server::Start()
     m_isRunning = true;
     SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
 
+    Shared::Logger::LogEvent(
+        Shared::SERVER_LOG_FILE,
+        "Server started"
+    );
+
     std::cout << "Server started on port " << Shared::DEFAULT_SERVER_PORT << ".\n";
     return true;
 }
@@ -76,52 +127,108 @@ void Server::Run()
         return;
     }
 
-    if (!AcceptClient())
-    {
-        std::cout << "Client accept failed.\n";
-        return;
-    }
-
-    SetState(Shared::ServerState::CONNECTED);
-    std::cout << "Client connected.\n";
-
     while (m_isRunning)
     {
-        Shared::Packet packet;
-
-        if (!ReceivePacket(packet))
+        if (!AcceptClient())
         {
-            std::cout << "Client disconnected or packet receive failed.\n";
-            break;
+            std::cout << "Client accept failed.\n";
+            continue;
         }
 
-        std::cout << "Received packet. Type=" << static_cast<std::uint32_t>(packet.header.type)
-            << ", PayloadSize=" << packet.header.payloadSize
-            << ", State=" << GetStateString() << "\n";
+        SetState(Shared::ServerState::CONNECTED);
 
-        // Temporary echo response for connection testing
-        Shared::Packet response;
-        response.header.type = Shared::PacketType::ACK;
-        response.header.timestamp = Shared::Serialization::GetCurrentTimestamp();
-        response.header.payloadSize = 0;
-        response.header.sensorCount = 0;
-        response.header.status = Shared::StatusCode::SUCCESS;
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Client connected"
+        );
 
-        if (!SendPacket(response))
+        std::cout << "Client connected.\n";
+
+        while (m_isRunning)
         {
-            std::cout << "Failed to send response packet.\n";
-            break;
+            Shared::Packet packet;
+
+            if (!ReceivePacket(packet))
+            {
+                Shared::Logger::LogEvent(
+                    Shared::SERVER_LOG_FILE,
+                    "Client disconnected or packet receive failed"
+                );
+
+                std::cout << "Client disconnected or packet receive failed.\n";
+                break;
+            }
+
+            std::cout << "Received packet. Type=" << static_cast<std::uint32_t>(packet.header.type)
+                << ", PayloadSize=" << packet.header.payloadSize
+                << ", State=" << GetStateString() << "\n";
+
+            if (packet.header.type == Shared::PacketType::TELEMETRY_REQUEST)
+            {
+                if (!HandleTelemetryRequest())
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Telemetry transfer failed"
+                    );
+
+                    std::cout << "Telemetry transfer failed.\n";
+                    break;
+                }
+
+                continue;
+            }
+
+            Shared::Packet response;
+
+            switch (packet.header.type)
+            {
+            case Shared::PacketType::VERIFY_REQUEST:
+                response = HandleVerification(packet);
+                break;
+
+            case Shared::PacketType::SENSOR_REQUEST:
+                response = HandleSensorRequest();
+                break;
+
+            default:
+                Shared::Logger::LogEvent(
+                    Shared::SERVER_LOG_FILE,
+                    "Invalid command received"
+                );
+
+                response = Shared::PacketUtils::CreateSimplePacket(
+                    Shared::PacketType::ERROR_PACKET,
+                    Shared::StatusCode::INVALID_COMMAND
+                );
+                break;
+            }
+
+            if (!SendPacket(response))
+            {
+                Shared::Logger::LogEvent(
+                    Shared::SERVER_LOG_FILE,
+                    "Failed to send response packet"
+                );
+
+                std::cout << "Failed to send response packet.\n";
+                break;
+            }
         }
+
+        CloseClientSocket();
+        SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
+
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Waiting for next client connection"
+        );
     }
-
-    CloseClientSocket();
-    SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
 }
 
 bool Server::InitializeWinsock()
 {
-    const int result = WSAStartup(MAKEWORD(2, 2), &m_wsaData);
-    return result == 0;
+    return WSAStartup(MAKEWORD(2, 2), &m_wsaData) == 0;
 }
 
 bool Server::CreateListenSocket()
@@ -146,14 +253,12 @@ bool Server::BindSocket()
 
 bool Server::ListenForClient()
 {
-    const int result = listen(m_listenSocket, SOMAXCONN);
-    return result != SOCKET_ERROR;
+    return listen(m_listenSocket, SOMAXCONN) != SOCKET_ERROR;
 }
 
 bool Server::AcceptClient()
 {
     std::cout << "Waiting for client connection...\n";
-
     m_clientSocket = accept(m_listenSocket, nullptr, nullptr);
     return m_clientSocket != INVALID_SOCKET;
 }
@@ -236,7 +341,18 @@ bool Server::ReceivePacket(Shared::Packet& outPacket)
         }
     }
 
-    return outPacket.IsValid();
+    if (!outPacket.IsValid())
+    {
+        return false;
+    }
+
+    Shared::Logger::LogPacket(
+        Shared::SERVER_LOG_FILE,
+        outPacket,
+        Shared::LogDirection::RECEIVED
+    );
+
+    return true;
 }
 
 bool Server::SendPacket(const Shared::Packet& packet)
@@ -248,7 +364,176 @@ bool Server::SendPacket(const Shared::Packet& packet)
         return false;
     }
 
-    return SendAll(reinterpret_cast<const char*>(serializedPacket.data()), static_cast<int>(serializedPacket.size()));
+    if (!SendAll(reinterpret_cast<const char*>(serializedPacket.data()), static_cast<int>(serializedPacket.size())))
+    {
+        return false;
+    }
+
+    Shared::Logger::LogPacket(
+        Shared::SERVER_LOG_FILE,
+        packet,
+        Shared::LogDirection::SENT
+    );
+
+    return true;
+}
+
+Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
+{
+    std::string token = Shared::Serialization::ExtractTextPayload(packet.payload);
+
+    if (token == Shared::EXPECTED_VERIFICATION_TOKEN)
+    {
+        SetState(Shared::ServerState::VERIFIED);
+
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Verification successful"
+        );
+
+        return Shared::PacketUtils::CreateTextPacket(
+            Shared::PacketType::VERIFY_RESPONSE,
+            "Verification Successful",
+            Shared::StatusCode::SUCCESS
+        );
+    }
+
+    Shared::Logger::LogEvent(
+        Shared::SERVER_LOG_FILE,
+        "Verification failed"
+    );
+
+    return Shared::PacketUtils::CreateTextPacket(
+        Shared::PacketType::VERIFY_RESPONSE,
+        "Verification Failed",
+        Shared::StatusCode::AUTH_FAILED
+    );
+}
+
+Shared::Packet Server::HandleSensorRequest()
+{
+    if (!IsVerified())
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Sensor request rejected: not verified"
+        );
+
+        return Shared::PacketUtils::CreateSimplePacket(
+            Shared::PacketType::ERROR_PACKET,
+            Shared::StatusCode::NOT_VERIFIED
+        );
+    }
+
+    SetState(Shared::ServerState::SENSOR_DATA);
+
+    const std::vector<Shared::SensorData> sensors = GenerateCurrentSensors();
+
+    Shared::Logger::LogEvent(
+        Shared::SERVER_LOG_FILE,
+        "Randomized sensor response generated"
+    );
+
+    return Shared::PacketUtils::CreateSensorResponsePacket(sensors);
+}
+
+bool Server::HandleTelemetryRequest()
+{
+    if (!IsVerified())
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Telemetry request rejected: not verified"
+        );
+
+        Shared::Packet errorPacket = Shared::PacketUtils::CreateSimplePacket(
+            Shared::PacketType::ERROR_PACKET,
+            Shared::StatusCode::NOT_VERIFIED
+        );
+
+        return SendPacket(errorPacket);
+    }
+
+    SetState(Shared::ServerState::TELEMETRY_TRANSFER);
+
+    Shared::Logger::LogEvent(
+        Shared::SERVER_LOG_FILE,
+        "Telemetry transfer started"
+    );
+
+    bool success = SendTelemetryFile();
+
+    SetState(Shared::ServerState::VERIFIED);
+
+    if (success)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Telemetry transfer completed"
+        );
+    }
+
+    return success;
+}
+
+bool Server::SendTelemetryFile()
+{
+    std::ifstream file(Shared::TELEMETRY_FILE_PATH, std::ios::binary);
+    if (!file.is_open())
+    {
+        Shared::Packet errorPacket = Shared::PacketUtils::CreateTextPacket(
+            Shared::PacketType::ERROR_PACKET,
+            "Telemetry file open failed",
+            Shared::StatusCode::INTERNAL_ERROR
+        );
+
+        return SendPacket(errorPacket);
+    }
+
+    std::vector<char> chunkBuffer(Shared::TELEMETRY_CHUNK_SIZE);
+
+    while (file.good())
+    {
+        file.read(chunkBuffer.data(), static_cast<std::streamsize>(chunkBuffer.size()));
+        std::streamsize bytesRead = file.gcount();
+
+        if (bytesRead <= 0)
+        {
+            break;
+        }
+
+        Shared::Packet chunkPacket;
+        chunkPacket.header.type = Shared::PacketType::TELEMETRY_CHUNK;
+        chunkPacket.header.timestamp = Shared::Serialization::GetCurrentTimestamp();
+        chunkPacket.header.sensorCount = 0;
+        chunkPacket.header.status = Shared::StatusCode::SUCCESS;
+
+        chunkPacket.payload.assign(
+            chunkBuffer.begin(),
+            chunkBuffer.begin() + bytesRead
+        );
+
+        chunkPacket.UpdatePayloadSize();
+
+        if (!SendPacket(chunkPacket))
+        {
+            return false;
+        }
+    }
+
+    Shared::Packet completePacket = Shared::PacketUtils::CreateTextPacket(
+        Shared::PacketType::TELEMETRY_COMPLETE,
+        "Telemetry transfer complete",
+        Shared::StatusCode::SUCCESS
+    );
+
+    return SendPacket(completePacket);
+}
+
+bool Server::IsVerified() const
+{
+    return m_state == Shared::ServerState::VERIFIED ||
+        m_state == Shared::ServerState::SENSOR_DATA;
 }
 
 void Server::CloseClientSocket()

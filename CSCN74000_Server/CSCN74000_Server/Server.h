@@ -8,8 +8,6 @@
 
 #include "Packet.h"
 #include "ServerState.h"
-#include "Constants.h"
-#include "Serialization.h"
 
 class Server
 {
@@ -33,6 +31,13 @@ private:
 
     bool ReceivePacket(Shared::Packet& outPacket);
     bool SendPacket(const Shared::Packet& packet);
+
+    Shared::Packet HandleVerification(const Shared::Packet& packet);
+    Shared::Packet HandleSensorRequest();
+    bool HandleTelemetryRequest();
+    bool SendTelemetryFile();
+
+    bool IsVerified() const;
 
     void CloseClientSocket();
     void CloseListenSocket();

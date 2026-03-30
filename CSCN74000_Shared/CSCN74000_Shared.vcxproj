@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="PacketHeader.h" />
     <ClInclude Include="PacketTypes.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="StatusCodes.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Serialization.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
