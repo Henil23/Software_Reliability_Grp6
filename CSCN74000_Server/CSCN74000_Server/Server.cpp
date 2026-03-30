@@ -6,7 +6,6 @@
 #include "ServerState.h"
 #include "Constants.h"
 #include "Serialization.h"
-#include "PacketUtils.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -100,25 +99,13 @@ void Server::Run()
             << ", PayloadSize=" << packet.header.payloadSize
             << ", State=" << GetStateString() << "\n";
 
+        // Temporary echo response for connection testing
         Shared::Packet response;
-
-        switch (packet.header.type)
-        {
-        case Shared::PacketType::VERIFY_REQUEST:
-            response = HandleVerification(packet);
-            break;
-
-        case Shared::PacketType::SENSOR_REQUEST:
-            response = HandleSensorRequest(packet);
-            break;
-
-        default:
-            response = Shared::PacketUtils::CreateSimplePacket(
-                Shared::PacketType::ERROR_PACKET,
-                Shared::StatusCode::INVALID_COMMAND
-            );
-            break;
-        }
+        response.header.type = Shared::PacketType::ACK;
+        response.header.timestamp = Shared::Serialization::GetCurrentTimestamp();
+        response.header.payloadSize = 0;
+        response.header.sensorCount = 0;
+        response.header.status = Shared::StatusCode::SUCCESS;
 
         if (!SendPacket(response))
         {
@@ -129,7 +116,7 @@ void Server::Run()
 
     CloseClientSocket();
     SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
-}   
+}
 
 bool Server::InitializeWinsock()
 {
@@ -262,58 +249,6 @@ bool Server::SendPacket(const Shared::Packet& packet)
     }
 
     return SendAll(reinterpret_cast<const char*>(serializedPacket.data()), static_cast<int>(serializedPacket.size()));
-}
-
-bool Server::IsVerified() const
-{
-    return m_state == Shared::ServerState::VERIFIED;
-}
-
-Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
-{
-    std::string token = Shared::Serialization::ExtractTextPayload(packet.payload);
-
-    if (token == Shared::EXPECTED_VERIFICATION_TOKEN)
-    {
-        SetState(Shared::ServerState::VERIFIED);
-
-        std::cout << "State changed to VERIFIED\n";
-
-        return Shared::PacketUtils::CreateTextPacket(
-            Shared::PacketType::VERIFY_RESPONSE,
-            "Verification Successful",
-            Shared::StatusCode::SUCCESS
-        );
-    }
-
-    return Shared::PacketUtils::CreateTextPacket(
-        Shared::PacketType::VERIFY_RESPONSE,
-        "Verification Failed",
-        Shared::StatusCode::AUTH_FAILED
-    );
-}
-
-Shared::Packet Server::HandleSensorRequest(const Shared::Packet& packet)
-{
-    if (!IsVerified())
-    {
-        return Shared::PacketUtils::CreateSimplePacket(
-            Shared::PacketType::ERROR_PACKET,
-            Shared::StatusCode::NOT_VERIFIED
-        );
-    }
-
-    SetState(Shared::ServerState::SENSOR_DATA);
-
-    std::vector<Shared::SensorData> sensors;
-
-    auto timestamp = Shared::Serialization::GetCurrentTimestamp();
-
-    sensors.emplace_back("Altitude", 35000, "ft", timestamp);
-    sensors.emplace_back("Speed", 450, "knots", timestamp);
-    sensors.emplace_back("Temperature", -50, "C", timestamp);
-
-    return Shared::PacketUtils::CreateSensorResponsePacket(sensors);
 }
 
 void Server::CloseClientSocket()
