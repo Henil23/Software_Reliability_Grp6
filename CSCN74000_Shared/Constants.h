@@ -17,4 +17,7 @@ namespace Shared
     constexpr const char* SERVER_LOG_FILE = "server_packets.log";
 
     constexpr const char* EXPECTED_VERIFICATION_TOKEN = "GROUND_STATION_AUTH";
+
+    constexpr const char* TELEMETRY_FILE_PATH = "data\\telemetry_log.txt";
+    constexpr const char* RECEIVED_TELEMETRY_FILE_PATH = "received_telemetry_log.txt";
 }

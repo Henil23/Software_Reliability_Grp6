@@ -8,8 +8,6 @@
 
 #include "Packet.h"
 #include "ServerState.h"
-#include "Constants.h"
-#include "Serialization.h"
 
 class Server
 {
@@ -34,17 +32,19 @@ private:
     bool ReceivePacket(Shared::Packet& outPacket);
     bool SendPacket(const Shared::Packet& packet);
 
+    Shared::Packet HandleVerification(const Shared::Packet& packet);
+    Shared::Packet HandleSensorRequest();
+    bool HandleTelemetryRequest();
+    bool SendTelemetryFile();
+
+    bool IsVerified() const;
+
     void CloseClientSocket();
     void CloseListenSocket();
     void CleanupWinsock();
 
     void SetState(Shared::ServerState newState);
     std::string GetStateString() const;
-
-    Shared::Packet HandleVerification(const Shared::Packet& packet);
-    Shared::Packet HandleSensorRequest(const Shared::Packet& packet);
-
-    bool IsVerified() const;
 
 private:
     WSADATA m_wsaData;
