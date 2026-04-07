@@ -100,11 +100,10 @@ void Client::Run()
         }
         else if (choice == 4)
         {
-            Shared::Logger::LogEvent(
-                Shared::CLIENT_LOG_FILE,
-                "Client exiting"
-            );
-            break;
+            if (HandleDisconnectRequest())
+            {
+                break;
+            }
         }
         else
         {
@@ -272,27 +271,67 @@ Shared::Packet Client::BuildTelemetryRequestPacket() const
     return packet;
 }
 
+Shared::Packet Client::BuildDisconnectRequestPacket() const
+{
+    Shared::Packet packet;
+    packet.header.type = Shared::PacketType::DISCONNECT_REQUEST;
+    packet.header.timestamp = Shared::Serialization::GetCurrentTimestamp();
+    packet.header.sensorCount = 0;
+    packet.header.status = Shared::StatusCode::SUCCESS;
+    packet.UpdatePayloadSize();
+
+    return packet;
+}
+
 void Client::HandleVerifyRequest()
 {
     Shared::Packet request = BuildVerifyRequestPacket();
 
     if (!SendPacket(request))
     {
-        std::cout << "Failed to send verify request\n";
+        std::cout << "Failed to send verification request\n";
+        return;
+    }
+
+    Shared::Packet ackPacket;
+    if (!ReceivePacket(ackPacket))
+    {
+        std::cout << "Failed to receive server acknowledgement\n";
+        return;
+    }
+
+    if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
+    {
+        std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
+        if (message.empty())
+        {
+            message = "Verification request rejected";
+        }
+
+        std::cout << message << "\n";
+        return;
+    }
+
+    if (ackPacket.header.type != Shared::PacketType::ACK)
+    {
+        std::cout << "Unexpected acknowledgement response\n";
         return;
     }
 
     Shared::Packet response;
     if (!ReceivePacket(response))
     {
-        std::cout << "Failed to receive verify response\n";
+        std::cout << "Failed to receive verification response\n";
         return;
     }
 
     std::string message = Shared::Serialization::ExtractTextPayload(response.payload);
+    if (message.empty())
+    {
+        message = "Verification complete";
+    }
 
-    std::cout << "Server Response: " << message << "\n";
-    std::cout << "Status: " << static_cast<std::uint32_t>(response.header.status) << "\n";
+    std::cout << message << "\n";
 }
 
 void Client::HandleSensorRequest()
@@ -305,6 +344,39 @@ void Client::HandleSensorRequest()
         return;
     }
 
+    Shared::Packet ackPacket;
+    if (!ReceivePacket(ackPacket))
+    {
+        std::cout << "Failed to receive server acknowledgement\n";
+        return;
+    }
+
+    if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
+    {
+        std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
+
+        if (!message.empty())
+        {
+            std::cout << message << "\n";
+        }
+        else if (ackPacket.header.status == Shared::StatusCode::NOT_VERIFIED)
+        {
+            std::cout << "Sensor request rejected: client not verified\n";
+        }
+        else
+        {
+            std::cout << "Sensor request failed\n";
+        }
+
+        return;
+    }
+
+    if (ackPacket.header.type != Shared::PacketType::ACK)
+    {
+        std::cout << "Unexpected acknowledgement response\n";
+        return;
+    }
+
     Shared::Packet response;
     if (!ReceivePacket(response))
     {
@@ -314,17 +386,7 @@ void Client::HandleSensorRequest()
 
     if (response.header.status != Shared::StatusCode::SUCCESS)
     {
-        std::cout << "Error: ";
-
-        if (response.header.status == Shared::StatusCode::NOT_VERIFIED)
-        {
-            std::cout << "Not Verified\n";
-        }
-        else
-        {
-            std::cout << "Request Failed\n";
-        }
-
+        std::cout << "Sensor request failed\n";
         return;
     }
 
@@ -348,10 +410,107 @@ void Client::HandleTelemetryRequest()
         return;
     }
 
+    Shared::Packet ackPacket;
+    if (!ReceivePacket(ackPacket))
+    {
+        std::cout << "Failed to receive server acknowledgement\n";
+        return;
+    }
+
+    if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
+    {
+        std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
+
+        if (!message.empty())
+        {
+            std::cout << message << "\n";
+        }
+        else if (ackPacket.header.status == Shared::StatusCode::NOT_VERIFIED)
+        {
+            std::cout << "Telemetry request rejected: client not verified\n";
+        }
+        else
+        {
+            std::cout << "Telemetry request failed\n";
+        }
+
+        return;
+    }
+
+    if (ackPacket.header.type != Shared::PacketType::ACK)
+    {
+        std::cout << "Unexpected acknowledgement response\n";
+        return;
+    }
+
     if (!ReceiveTelemetryFile())
     {
         std::cout << "Telemetry transfer failed\n";
     }
+}
+
+bool Client::HandleDisconnectRequest()
+{
+    Shared::Packet request = BuildDisconnectRequestPacket();
+
+    if (!SendPacket(request))
+    {
+        std::cout << "Failed to send disconnect request\n";
+        return false;
+    }
+
+    Shared::Packet ackPacket;
+    if (!ReceivePacket(ackPacket))
+    {
+        std::cout << "Failed to receive server acknowledgement\n";
+        return false;
+    }
+
+    if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
+    {
+        std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
+        if (message.empty())
+        {
+            message = "Disconnect request failed";
+        }
+
+        std::cout << message << "\n";
+        return false;
+    }
+
+    if (ackPacket.header.type != Shared::PacketType::ACK)
+    {
+        std::cout << "Unexpected acknowledgement response\n";
+        return false;
+    }
+
+    Shared::Packet response;
+    if (!ReceivePacket(response))
+    {
+        std::cout << "Failed to receive disconnect response\n";
+        return false;
+    }
+
+    if (response.header.type != Shared::PacketType::DISCONNECT_RESPONSE)
+    {
+        std::cout << "Unexpected disconnect response\n";
+        return false;
+    }
+
+    std::string message = Shared::Serialization::ExtractTextPayload(response.payload);
+    if (message.empty())
+    {
+        message = "Disconnected successfully";
+    }
+
+    std::cout << message << "\n";
+
+    Shared::Logger::LogEvent(
+        Shared::CLIENT_LOG_FILE,
+        "Client disconnect completed"
+    );
+
+    return true;
 }
 
 bool Client::ReceiveTelemetryFile()
@@ -379,18 +538,17 @@ bool Client::ReceiveTelemetryFile()
         {
             std::string message = Shared::Serialization::ExtractTextPayload(response.payload);
 
-            std::cout << "Telemetry Error: ";
             if (!message.empty())
             {
                 std::cout << message << "\n";
             }
             else if (response.header.status == Shared::StatusCode::NOT_VERIFIED)
             {
-                std::cout << "Not Verified\n";
+                std::cout << "Telemetry request rejected: client not verified\n";
             }
             else
             {
-                std::cout << "Request Failed\n";
+                std::cout << "Telemetry request failed\n";
             }
 
             outFile.close();

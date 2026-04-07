@@ -159,9 +159,26 @@ void Server::Run()
                 break;
             }
 
-            std::cout << "Received packet. Type=" << static_cast<std::uint32_t>(packet.header.type)
-                << ", PayloadSize=" << packet.header.payloadSize
-                << ", State=" << GetStateString() << "\n";
+            if (packet.header.type == Shared::PacketType::VERIFY_REQUEST)
+            {
+                std::cout << "Verification request received.\n";
+            }
+            else if (packet.header.type == Shared::PacketType::SENSOR_REQUEST)
+            {
+                std::cout << "Sensor data request received.\n";
+            }
+            else if (packet.header.type == Shared::PacketType::TELEMETRY_REQUEST)
+            {
+                std::cout << "Telemetry file request received.\n";
+            }
+            else if (packet.header.type == Shared::PacketType::DISCONNECT_REQUEST)
+            {
+                std::cout << "Disconnect request received.\n";
+            }
+            else
+            {
+                std::cout << "Invalid command received.\n";
+            }
 
             if (packet.header.type == Shared::PacketType::TELEMETRY_REQUEST)
             {
@@ -191,17 +208,41 @@ void Server::Run()
                 response = HandleSensorRequest();
                 break;
 
+            case Shared::PacketType::DISCONNECT_REQUEST:
+                response = HandleDisconnectRequest();
+                break;
+
             default:
                 Shared::Logger::LogEvent(
                     Shared::SERVER_LOG_FILE,
                     "Invalid command received"
                 );
 
-                response = Shared::PacketUtils::CreateSimplePacket(
+                response = Shared::PacketUtils::CreateTextPacket(
                     Shared::PacketType::ERROR_PACKET,
+                    "Invalid command rejected by server",
                     Shared::StatusCode::INVALID_COMMAND
                 );
                 break;
+            }
+
+            if (response.header.type != Shared::PacketType::ERROR_PACKET)
+            {
+                Shared::Packet ackPacket = Shared::PacketUtils::CreateSimplePacket(
+                    Shared::PacketType::ACK,
+                    Shared::StatusCode::SUCCESS
+                );
+
+                if (!SendPacket(ackPacket))
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Failed to send acknowledgement packet"
+                    );
+
+                    std::cout << "Failed to send acknowledgement packet.\n";
+                    break;
+                }
             }
 
             if (!SendPacket(response))
@@ -214,6 +255,17 @@ void Server::Run()
                 std::cout << "Failed to send response packet.\n";
                 break;
             }
+
+            if (packet.header.type == Shared::PacketType::DISCONNECT_REQUEST)
+            {
+                Shared::Logger::LogEvent(
+                    Shared::SERVER_LOG_FILE,
+                    "Disconnect response sent"
+                );
+
+                std::cout << "Disconnect response sent.\n";
+                break;
+            }
         }
 
         CloseClientSocket();
@@ -223,6 +275,8 @@ void Server::Run()
             Shared::SERVER_LOG_FILE,
             "Waiting for next client connection"
         );
+
+        std::cout << "Waiting for client connection...\n";
     }
 }
 
@@ -393,7 +447,7 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
 
         return Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::VERIFY_RESPONSE,
-            "Verification Successful",
+            "Verification successful",
             Shared::StatusCode::SUCCESS
         );
     }
@@ -405,7 +459,7 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
 
     return Shared::PacketUtils::CreateTextPacket(
         Shared::PacketType::VERIFY_RESPONSE,
-        "Verification Failed",
+        "Verification failed",
         Shared::StatusCode::AUTH_FAILED
     );
 }
@@ -419,8 +473,9 @@ Shared::Packet Server::HandleSensorRequest()
             "Sensor request rejected: not verified"
         );
 
-        return Shared::PacketUtils::CreateSimplePacket(
+        return Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::ERROR_PACKET,
+            "Sensor request rejected: client not verified",
             Shared::StatusCode::NOT_VERIFIED
         );
     }
@@ -437,6 +492,22 @@ Shared::Packet Server::HandleSensorRequest()
     return Shared::PacketUtils::CreateSensorResponsePacket(sensors);
 }
 
+Shared::Packet Server::HandleDisconnectRequest()
+{
+    SetState(Shared::ServerState::DISCONNECTING);
+
+    Shared::Logger::LogEvent(
+        Shared::SERVER_LOG_FILE,
+        "Valid disconnect request received"
+    );
+
+    return Shared::PacketUtils::CreateTextPacket(
+        Shared::PacketType::DISCONNECT_RESPONSE,
+        "Disconnect successful",
+        Shared::StatusCode::SUCCESS
+    );
+}
+
 bool Server::HandleTelemetryRequest()
 {
     if (!IsVerified())
@@ -446,8 +517,9 @@ bool Server::HandleTelemetryRequest()
             "Telemetry request rejected: not verified"
         );
 
-        Shared::Packet errorPacket = Shared::PacketUtils::CreateSimplePacket(
+        Shared::Packet errorPacket = Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::ERROR_PACKET,
+            "Telemetry request rejected: client not verified",
             Shared::StatusCode::NOT_VERIFIED
         );
 
@@ -460,6 +532,22 @@ bool Server::HandleTelemetryRequest()
         Shared::SERVER_LOG_FILE,
         "Telemetry transfer started"
     );
+
+    Shared::Packet ackPacket = Shared::PacketUtils::CreateSimplePacket(
+        Shared::PacketType::ACK,
+        Shared::StatusCode::SUCCESS
+    );
+
+    if (!SendPacket(ackPacket))
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Failed to send telemetry acknowledgement packet"
+        );
+
+        SetState(Shared::ServerState::VERIFIED);
+        return false;
+    }
 
     bool success = SendTelemetryFile();
 
