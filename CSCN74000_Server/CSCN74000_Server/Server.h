@@ -12,14 +12,15 @@
 class Server
 {
 public:
-    Server();
+    //Server();
+    Server(bool testMode = false);
     ~Server();
 
     bool Start();
     void Stop();
     void Run();
 
-private:
+public:
     bool InitializeWinsock();
     bool CreateListenSocket();
     bool BindSocket();
@@ -46,7 +47,7 @@ private:
 
     void SetState(Shared::ServerState newState);
     std::string GetStateString() const;
-
+   
 private:
     WSADATA m_wsaData;
     SOCKET m_listenSocket;
@@ -54,4 +55,5 @@ private:
     sockaddr_in m_serverAddress;
     Shared::ServerState m_state;
     bool m_isRunning;
+    bool m_testMode;
 };
