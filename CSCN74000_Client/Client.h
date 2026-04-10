@@ -33,10 +33,15 @@ private:
     Shared::Packet BuildVerifyRequestPacket() const;
     Shared::Packet BuildSensorRequestPacket() const;
     Shared::Packet BuildTelemetryRequestPacket() const;
+    Shared::Packet BuildDisconnectRequestPacket() const;
+    Shared::Packet BuildInvalidCommandPacket() const;
+    
 
     void HandleVerifyRequest();
     void HandleSensorRequest();
     void HandleTelemetryRequest();
+    void HandleInvalidCommandTest();
+    bool HandleDisconnectRequest();
 
     bool ReceiveTelemetryFile();
 

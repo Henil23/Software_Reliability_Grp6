@@ -34,6 +34,7 @@ private:
 
     Shared::Packet HandleVerification(const Shared::Packet& packet);
     Shared::Packet HandleSensorRequest();
+    Shared::Packet HandleDisconnectRequest();
     bool HandleTelemetryRequest();
     bool SendTelemetryFile();
 
