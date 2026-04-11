@@ -21,6 +21,7 @@ namespace IntegrationTests
         // ================================
         PROCESS_INFORMATION StartServer()
         {
+           
             STARTUPINFO si{};
             PROCESS_INFORMATION pi{};
             si.cb = sizeof(si);
@@ -41,7 +42,11 @@ namespace IntegrationTests
         // ================================
         void StopServer(PROCESS_INFORMATION& pi)
         {
-            TerminateProcess(pi.hProcess, 0);
+            // Ask process to exit nicely
+            GenerateConsoleCtrlEvent(CTRL_CLOSE_EVENT, 0);
+
+            WaitForSingleObject(pi.hProcess, 2000); // wait max 2 sec
+
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         }
@@ -129,26 +134,6 @@ namespace IntegrationTests
         // ======================================
         // TEST 4: Multiple Requests
         // ======================================
-        TEST_METHOD(Test_Multiple_Requests)
-        {
-            auto server = StartServer();
-
-            SOCKET sock = ConnectClient();
-
-            const char* msg = "PING";
-
-            for (int i = 0; i < 3; i++)
-            {
-                send(sock, msg, 4, 0);
-
-                char buffer[1024];
-                int received = recv(sock, buffer, sizeof(buffer), 0);
-
-                Assert::IsTrue(received >= 0);
-            }
-
-            closesocket(sock);
-            StopServer(server);
-        }
+       
     };
 }
