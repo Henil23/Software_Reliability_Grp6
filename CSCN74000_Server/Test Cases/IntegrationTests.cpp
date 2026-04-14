@@ -1,7 +1,11 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include "CppUnitTest.h"
-
+#include "Packet.h"
+#include "Serialization.h"
+#include "PacketTypes.h"
+#include "StatusCodes.h"
+#include "Constants.h"
 #include <winsock2.h>
 #include <windows.h>
 #include <vector>
@@ -70,6 +74,29 @@ namespace IntegrationTests
             return sock;
         }
 
+        bool SendPacketRaw(SOCKET sock, const Shared::Packet& packet)
+        {
+            std::vector<uint8_t> buffer;
+            Shared::Serialization::SerializePacket(packet, buffer);
+
+            return send(sock,
+                reinterpret_cast<const char*>(buffer.data()),
+                (int)buffer.size(), 0) > 0;
+        }
+
+        bool ReceivePacketRaw(SOCKET sock, Shared::Packet& packet)
+        {
+            std::vector<uint8_t> buffer(4096);
+
+            int bytes = recv(sock,
+                reinterpret_cast<char*>(buffer.data()),
+                (int)buffer.size(), 0);
+
+            if (bytes <= 0) return false;
+
+            buffer.resize(bytes);
+            return Shared::Serialization::DeserializePacket(buffer, packet);
+        }
 
         // ======================================
         // TEST 1: Connection
@@ -86,54 +113,66 @@ namespace IntegrationTests
             StopServer(server);
         }
 
-
         // ======================================
-        // TEST 2: Basic Send/Receive
-        // ======================================
-        TEST_METHOD(Test_Send_Receive)
+ // TEST 2: Verification Flow
+ // ======================================
+        TEST_METHOD(Test_Verification)
         {
             auto server = StartServer();
-
             SOCKET sock = ConnectClient();
 
-            const char* msg = "HELLO";
-            send(sock, msg, 5, 0);
+            Shared::Packet pkt;
+            pkt.header.type = Shared::PacketType::VERIFY_REQUEST;
 
-            char buffer[1024];
-            int received = recv(sock, buffer, sizeof(buffer), 0);
+            Shared::Serialization::BuildTextPayload(
+                Shared::EXPECTED_VERIFICATION_TOKEN,
+                pkt.payload
+            );
 
-            Assert::IsTrue(received >= 0);
+            pkt.UpdatePayloadSize();
+
+            SendPacketRaw(sock, pkt);
+
+            Shared::Packet response;
+            bool received = ReceivePacketRaw(sock, response);
+
+            Assert::IsTrue(received);
+
+            // Current behavior to  ACK
+            Assert::AreEqual(
+                (int)Shared::PacketType::ACK,
+                (int)response.header.type
+            );
 
             closesocket(sock);
             StopServer(server);
         }
-
-
         // ======================================
-        // TEST 3: Invalid Request Handling
-        // ======================================
-        TEST_METHOD(Test_Invalid_Request)
+ // TEST 3: Sensor Request WITHOUT Verification
+ // ======================================
+        TEST_METHOD(Test_SensorWithoutVerification)
         {
             auto server = StartServer();
-
             SOCKET sock = ConnectClient();
 
-            const char* msg = "INVALID_DATA";
-            send(sock, msg, 12, 0);
+            Shared::Packet pkt;
+            pkt.header.type = Shared::PacketType::SENSOR_REQUEST;
+            pkt.UpdatePayloadSize();
 
-            char buffer[1024];
-            int received = recv(sock, buffer, sizeof(buffer), 0);
+            SendPacketRaw(sock, pkt);
 
-            Assert::IsTrue(received >= 0);
+            Shared::Packet response;
+            bool received = ReceivePacketRaw(sock, response);
+
+            Assert::IsTrue(received);
+
+            Assert::AreEqual(
+                (int)Shared::PacketType::ERROR_PACKET,
+                (int)response.header.type
+            );
 
             closesocket(sock);
             StopServer(server);
         }
-
-
-        // ======================================
-        // TEST 4: Multiple Requests
-        // ======================================
-       
     };
 }
