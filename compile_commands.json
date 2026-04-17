@@ -1,0 +1,32 @@
+[
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server/main.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server/main.cpp"
+  },
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server/Server.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server/Server.cpp"
+  },
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp"
+  },
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp"
+  },
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client/Client.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client/Client.cpp"
+  },
+  {
+    "directory": "/Users/henil23/Desktop/Software_Reliability_Grp6",
+    "command": "clang++ -std=c++17 -I\"/Users/henil23/Desktop/Software_Reliability_Grp6\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Server/CSCN74000_Server\" -I\"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared\" -c \"/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client/main.cpp\"",
+    "file": "/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Client/main.cpp"
+  }
+]

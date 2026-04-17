@@ -4,6 +4,7 @@
 
 namespace Shared
 {
+    // Status codes used to indicate request/result outcome in packets.
     enum class StatusCode : std::uint32_t
     {
         SUCCESS = 0,

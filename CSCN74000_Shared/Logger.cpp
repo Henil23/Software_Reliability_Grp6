@@ -9,8 +9,10 @@
 
 namespace
 {
+    // Protects log file writing so multiple log calls do not overlap.
     std::mutex g_logMutex;
 
+    // Returns current local date and time as a formatted string.
     std::string GetLocalTimeString()
     {
         const auto now = std::chrono::system_clock::now();
@@ -27,6 +29,7 @@ namespace
 
 namespace Shared
 {
+    // Writes packet-related information to the given log file.
     void Logger::LogPacket(
         const std::string& filePath,
         const Packet& packet,
@@ -58,6 +61,7 @@ namespace Shared
         file << "\n";
     }
 
+    // Writes a general system event message to the log file.
     void Logger::LogEvent(
         const std::string& filePath,
         const std::string& message
@@ -75,6 +79,7 @@ namespace Shared
             << "event=" << message << "\n";
     }
 
+    // Converts log direction enum to readable text.
     std::string Logger::DirectionToString(LogDirection direction)
     {
         switch (direction)
@@ -90,6 +95,7 @@ namespace Shared
         }
     }
 
+    // Converts packet type enum to readable text.
     std::string Logger::PacketTypeToString(PacketType type)
     {
         switch (type)
@@ -121,6 +127,7 @@ namespace Shared
         }
     }
 
+    // Converts status code enum to readable text.
     std::string Logger::StatusCodeToString(StatusCode status)
     {
         switch (status)

@@ -4,6 +4,7 @@
 
 namespace Shared
 {
+    // Represents the current operating state of the server.
     enum class ServerState : std::uint32_t
     {
         WAITING_FOR_CONNECTION = 0,

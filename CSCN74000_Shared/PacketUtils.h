@@ -9,9 +9,11 @@
 
 namespace Shared
 {
+    // Helper class for creating commonly used packet types.
     class PacketUtils
     {
     public:
+        // Creates a packet with header fields only and no payload.
         static Packet CreateSimplePacket(PacketType type, StatusCode status = StatusCode::SUCCESS)
         {
             Packet packet;
@@ -23,6 +25,7 @@ namespace Shared
             return packet;
         }
 
+        // Creates a packet containing a text message payload.
         static Packet CreateTextPacket(PacketType type, const std::string& text, StatusCode status = StatusCode::SUCCESS)
         {
             Packet packet = CreateSimplePacket(type, status);
@@ -37,6 +40,7 @@ namespace Shared
             return packet;
         }
 
+        // Creates a sensor response packet from a list of sensor readings.
         static Packet CreateSensorResponsePacket(const std::vector<SensorData>& sensors)
         {
             Packet packet = CreateSimplePacket(PacketType::SENSOR_RESPONSE, StatusCode::SUCCESS);
@@ -55,5 +59,5 @@ namespace Shared
             packet.UpdatePayloadSize();
             return packet;
         }
-    };  
+    };
 }

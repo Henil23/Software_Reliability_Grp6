@@ -16,22 +16,26 @@
 Client::Client()
     : m_socket(INVALID_SOCKET)
 {
+    // Initialize Winsock data structure to zero.
     ZeroMemory(&m_wsaData, sizeof(m_wsaData));
 }
 
 Client::~Client()
 {
+    // Ensure all networking resources are released when object is destroyed.
     Stop();
 }
 
 bool Client::Start()
 {
+    // Start Winsock before using sockets.
     if (!InitializeWinsock())
     {
         std::cout << "WSAStartup failed\n";
         return false;
     }
 
+    // Create the TCP socket used by the client.
     if (!CreateSocket())
     {
         std::cout << "Socket creation failed\n";
@@ -44,12 +48,14 @@ bool Client::Start()
 
 void Client::Stop()
 {
+    // Close the socket if it is currently open.
     if (m_socket != INVALID_SOCKET)
     {
         closesocket(m_socket);
         m_socket = INVALID_SOCKET;
     }
 
+    // Release Winsock resources.
     WSACleanup();
 }
 
@@ -59,18 +65,21 @@ bool Client::ConnectToServer()
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(Shared::DEFAULT_SERVER_PORT);
 
+    // Convert IP address string into binary form.
     if (inet_pton(AF_INET, "127.0.0.1", &serverAddress.sin_addr) != 1)
     {
         std::cout << "Invalid server address\n";
         return false;
     }
 
+    // Attempt to connect to the server.
     if (connect(m_socket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) == SOCKET_ERROR)
     {
         std::cout << "Connection failed\n";
         return false;
     }
 
+    // Log successful connection.
     Shared::Logger::LogEvent(
         Shared::CLIENT_LOG_FILE,
         "Connected to server"
@@ -82,6 +91,7 @@ bool Client::ConnectToServer()
 
 void Client::Run()
 {
+    // Main menu loop for sending requests to the server.
     while (true)
     {
         int choice = ReadMenuChoice();
@@ -114,11 +124,13 @@ void Client::Run()
 
 bool Client::InitializeWinsock()
 {
+    // Load Winsock version 2.2.
     return WSAStartup(MAKEWORD(2, 2), &m_wsaData) == 0;
 }
 
 bool Client::CreateSocket()
 {
+    // Create a TCP socket.
     m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     return m_socket != INVALID_SOCKET;
 }
@@ -127,6 +139,7 @@ bool Client::SendAll(const char* buffer, int totalBytes)
 {
     int bytesSent = 0;
 
+    // Keep sending until the entire buffer is transmitted.
     while (bytesSent < totalBytes)
     {
         int result = send(m_socket, buffer + bytesSent, totalBytes - bytesSent, 0);
@@ -146,6 +159,7 @@ bool Client::ReceiveAll(char* buffer, int totalBytes)
 {
     int bytesReceived = 0;
 
+    // Keep receiving until the expected number of bytes is read.
     while (bytesReceived < totalBytes)
     {
         int result = recv(m_socket, buffer + bytesReceived, totalBytes - bytesReceived, 0);
@@ -165,16 +179,19 @@ bool Client::SendPacket(const Shared::Packet& packet)
 {
     std::vector<std::uint8_t> buffer;
 
+    // Convert packet object into raw bytes before sending.
     if (!Shared::Serialization::SerializePacket(packet, buffer))
     {
         return false;
     }
 
+    // Send the serialized packet bytes.
     if (!SendAll(reinterpret_cast<const char*>(buffer.data()), static_cast<int>(buffer.size())))
     {
         return false;
     }
 
+    // Log outgoing packet.
     Shared::Logger::LogPacket(
         Shared::CLIENT_LOG_FILE,
         packet,
@@ -189,16 +206,19 @@ bool Client::ReceivePacket(Shared::Packet& packet)
     const std::size_t headerSize = Shared::Serialization::GetPacketHeaderSize();
     std::vector<std::uint8_t> headerBuffer(headerSize);
 
+    // Receive packet header first.
     if (!ReceiveAll(reinterpret_cast<char*>(headerBuffer.data()), static_cast<int>(headerBuffer.size())))
     {
         return false;
     }
 
+    // Decode header fields.
     if (!Shared::Serialization::DeserializePacketHeader(headerBuffer, packet.header))
     {
         return false;
     }
 
+    // Reject invalid or oversized payload sizes.
     if (!Shared::Serialization::ValidatePayloadSize(packet.header.payloadSize))
     {
         return false;
@@ -206,6 +226,7 @@ bool Client::ReceivePacket(Shared::Packet& packet)
 
     packet.payload.clear();
 
+    // Receive payload only if packet contains one.
     if (packet.header.payloadSize > 0)
     {
         packet.payload.resize(packet.header.payloadSize);
@@ -216,11 +237,13 @@ bool Client::ReceivePacket(Shared::Packet& packet)
         }
     }
 
+    // Validate final packet structure.
     if (!packet.IsValid())
     {
         return false;
     }
 
+    // Log incoming packet.
     Shared::Logger::LogPacket(
         Shared::CLIENT_LOG_FILE,
         packet,
@@ -238,6 +261,7 @@ Shared::Packet Client::BuildVerifyRequestPacket() const
     packet.header.sensorCount = 0;
     packet.header.status = Shared::StatusCode::SUCCESS;
 
+    // Add verification token as payload.
     if (!Shared::Serialization::BuildTextPayload(Shared::EXPECTED_VERIFICATION_TOKEN, packet.payload))
     {
         packet.payload.clear();
@@ -285,6 +309,7 @@ Shared::Packet Client::BuildDisconnectRequestPacket() const
 
 void Client::HandleVerifyRequest()
 {
+    // Build and send verification request to the server.
     Shared::Packet request = BuildVerifyRequestPacket();
 
     if (!SendPacket(request))
@@ -293,6 +318,7 @@ void Client::HandleVerifyRequest()
         return;
     }
 
+    // Receive acknowledgement packet first.
     Shared::Packet ackPacket;
     if (!ReceivePacket(ackPacket))
     {
@@ -300,6 +326,7 @@ void Client::HandleVerifyRequest()
         return;
     }
 
+    // Handle verification rejection.
     if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
     {
         std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
@@ -312,12 +339,14 @@ void Client::HandleVerifyRequest()
         return;
     }
 
+    // Server must respond with ACK before sending actual response.
     if (ackPacket.header.type != Shared::PacketType::ACK)
     {
         std::cout << "Unexpected acknowledgement response\n";
         return;
     }
 
+    // Receive final verification response.
     Shared::Packet response;
     if (!ReceivePacket(response))
     {
@@ -336,6 +365,7 @@ void Client::HandleVerifyRequest()
 
 void Client::HandleSensorRequest()
 {
+    // Build and send sensor data request.
     Shared::Packet request = BuildSensorRequestPacket();
 
     if (!SendPacket(request))
@@ -344,6 +374,7 @@ void Client::HandleSensorRequest()
         return;
     }
 
+    // Receive acknowledgement packet.
     Shared::Packet ackPacket;
     if (!ReceivePacket(ackPacket))
     {
@@ -351,6 +382,7 @@ void Client::HandleSensorRequest()
         return;
     }
 
+    // Handle request failure or missing verification.
     if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
     {
         std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
@@ -377,6 +409,7 @@ void Client::HandleSensorRequest()
         return;
     }
 
+    // Receive actual sensor response packet.
     Shared::Packet response;
     if (!ReceivePacket(response))
     {
@@ -390,6 +423,7 @@ void Client::HandleSensorRequest()
         return;
     }
 
+    // Decode sensor list from payload.
     std::vector<Shared::SensorData> sensors;
     if (!Shared::Serialization::DeserializeSensorDataList(response.payload, sensors))
     {
@@ -402,6 +436,7 @@ void Client::HandleSensorRequest()
 
 void Client::HandleTelemetryRequest()
 {
+    // Build and send telemetry file request.
     Shared::Packet request = BuildTelemetryRequestPacket();
 
     if (!SendPacket(request))
@@ -410,6 +445,7 @@ void Client::HandleTelemetryRequest()
         return;
     }
 
+    // Receive acknowledgement packet.
     Shared::Packet ackPacket;
     if (!ReceivePacket(ackPacket))
     {
@@ -417,6 +453,7 @@ void Client::HandleTelemetryRequest()
         return;
     }
 
+    // Handle telemetry request errors.
     if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
     {
         std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
@@ -443,6 +480,7 @@ void Client::HandleTelemetryRequest()
         return;
     }
 
+    // Receive telemetry file in chunks after ACK.
     if (!ReceiveTelemetryFile())
     {
         std::cout << "Telemetry transfer failed\n";
@@ -451,6 +489,7 @@ void Client::HandleTelemetryRequest()
 
 bool Client::HandleDisconnectRequest()
 {
+    // Build and send disconnect request.
     Shared::Packet request = BuildDisconnectRequestPacket();
 
     if (!SendPacket(request))
@@ -459,6 +498,7 @@ bool Client::HandleDisconnectRequest()
         return false;
     }
 
+    // Receive acknowledgement packet.
     Shared::Packet ackPacket;
     if (!ReceivePacket(ackPacket))
     {
@@ -466,6 +506,7 @@ bool Client::HandleDisconnectRequest()
         return false;
     }
 
+    // Handle disconnect error response.
     if (ackPacket.header.type == Shared::PacketType::ERROR_PACKET)
     {
         std::string message = Shared::Serialization::ExtractTextPayload(ackPacket.payload);
@@ -484,6 +525,7 @@ bool Client::HandleDisconnectRequest()
         return false;
     }
 
+    // Receive final disconnect confirmation.
     Shared::Packet response;
     if (!ReceivePacket(response))
     {
@@ -505,6 +547,7 @@ bool Client::HandleDisconnectRequest()
 
     std::cout << message << "\n";
 
+    // Log disconnect completion.
     Shared::Logger::LogEvent(
         Shared::CLIENT_LOG_FILE,
         "Client disconnect completed"
@@ -515,6 +558,7 @@ bool Client::HandleDisconnectRequest()
 
 bool Client::ReceiveTelemetryFile()
 {
+    // Open output file where received telemetry data will be stored.
     std::ofstream outFile(Shared::RECEIVED_TELEMETRY_FILE_PATH, std::ios::binary | std::ios::trunc);
     if (!outFile.is_open())
     {
@@ -528,12 +572,14 @@ bool Client::ReceiveTelemetryFile()
     {
         Shared::Packet response;
 
+        // Receive next telemetry packet.
         if (!ReceivePacket(response))
         {
             outFile.close();
             return false;
         }
 
+        // Handle server-side transfer errors.
         if (response.header.type == Shared::PacketType::ERROR_PACKET)
         {
             std::string message = Shared::Serialization::ExtractTextPayload(response.payload);
@@ -555,6 +601,7 @@ bool Client::ReceiveTelemetryFile()
             return false;
         }
 
+        // Write telemetry chunk data into file.
         if (response.header.type == Shared::PacketType::TELEMETRY_CHUNK)
         {
             if (!response.payload.empty())
@@ -575,6 +622,7 @@ bool Client::ReceiveTelemetryFile()
         }
         else if (response.header.type == Shared::PacketType::TELEMETRY_COMPLETE)
         {
+            // End of file transfer.
             outFile.close();
 
             std::string message = Shared::Serialization::ExtractTextPayload(response.payload);
@@ -596,6 +644,7 @@ bool Client::ReceiveTelemetryFile()
         }
         else
         {
+            // Reject unexpected packet types during file transfer.
             outFile.close();
             std::cout << "Unexpected packet received during telemetry transfer\n";
             return false;
@@ -605,6 +654,7 @@ bool Client::ReceiveTelemetryFile()
 
 void Client::DisplaySensors(const std::vector<Shared::SensorData>& sensors, std::uint64_t packetTimestamp) const
 {
+    // Display sensor values received from the server.
     std::cout << "\n--- Sensor Data ---\n";
     std::cout << "Packet timestamp: " << packetTimestamp << "\n";
 
@@ -618,9 +668,11 @@ int Client::ReadMenuChoice() const
 {
     int choice = 0;
 
+    // Show menu and read user input.
     std::cout << "\n1. Verify Connection\n2. Request Sensor Data\n3. Request Telemetry File\n4. Exit\nChoice: ";
     std::cin >> choice;
 
+    // Handle invalid non-numeric input safely.
     if (std::cin.fail())
     {
         std::cin.clear();
