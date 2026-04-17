@@ -1,0 +1,43 @@
+Requirement Number,Definition,Author
+Client  Application Functional Requirements,,
+REQ-CLT-010,The client shall establish a TCP/IP connection to the server before any data exchange is attempted.,Henil Patel 
+REQ-CLT-020,The client shall send a connection verification request before issuing any operational command. ,Jainish Prajapati
+REQ-CLT-030,The client shall allow the user to request current aircraft sensor data from the server,Henil Patel 
+REQ-CLT-040,The client shall allow the user to request a telemetry log file from the server.,Henil Patel 
+REQ-CLT-050,The client shall display received sensor data into readable user interface. ,Kalp Mehta
+REQ-CLT-060,The client should display the timestamp associated with each received sensor data packet. (Optional),Henil Patel
+REQ-CLT-070,The client should notify the user when a large file transfer has completed successfully. (Optional),Kalp Mehta 
+Server Application Functional Requirements,,
+REQ-SVR-010,The server shall wait for incoming client connections on a predefined TCP/IP port. ,Jainish Prajapati
+REQ-SVR-020,The server shall verify the client connection before accepting any operational command.,Jainish Prajapati
+REQ-SVR-030,The server shall respond to a valid sensor data request by transmitting a structured sensor data packet.,Kalp Mehta
+REQ-SVR-040,The sever shall respond to a valid telemetry file request by transmitting a telemetry file greater than 1 MB in size.,Kalp Mehta
+REQ-SVR-050,Server shall reject commands received before successful connection verification.,Henil Patel 
+REQ-SVR-060,The server should include an error packet when an invalid command or state is transmitted.,Henil Patel 
+REQ-SVR-070,Server should return an acknowledgement packet for each valid client command is processed. ,Jainish Prajapati
+Server State Machine Requirements,,
+REQ-STM-010,The server shall implement 7 or 8 operational states.,Henill Patel 
+REQ-STM-020,The server shall implement transitions only from the verified state.,Henil Patel 
+REQ-STM-030,Server should log all invalid state transition attempts. (Optional),Jainish Prajapati
+REQ-STM-040,Server should return to WAITING after a valid disconnect is completed. ,Jainish Prajapati
+Data Packet Definition Requirements,,
+REQ-PKT-010,"All client-server communications shall use a predefined packet structure which contains packet type, timestamp, payload size, sensor count, and payload data. ",Kalp Mehta
+REQ-PKT-020,The packet structure should include a status filed to identify acknowledgement or error conditions. ,Kalp Mehta
+REQ-PKT-030,The packet structure shall contain a payload element which is dynamically allocated to store sensor readings or telemetry file data. ,Jainish Prajapati
+REQ-PKT-040,,
+REQ-PKT-050,,
+REQ-PKT-060,,
+Data Communication Requirements,,
+REQ-COM-010,The client server shall communicate using TCP/IP.,Henil Patel 
+REQ-COM-020,The communication design should support retransmission handling through TCP reliability mechanisms.,Henil Patel 
+REQ-COM-030,,
+REQ-COM-040,,
+REQ-COM-050,,
+REQ-COM-060,,
+Transmit/Receive Logging Requirements,,
+REQ-LOG-010,The logging mechanism should record connection verification events and invalid command attempts. ,Kalp Mehta 
+REQ-LOG-020,"Both client and server shall have logging functionality for all transmitted and received packets to a file, including timestamp, packet type, direction, and result status.",Jainish Prajapati
+REQ-LOG-030,,
+REQ-LOG-040,,
+REQ-LOG-050,,
+REQ-LOG-060,,

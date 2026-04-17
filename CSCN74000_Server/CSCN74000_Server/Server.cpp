@@ -1,4 +1,4 @@
-#include "Server.h"
+﻿#include "Server.h"
 
 #include <fstream>
 #include <iostream>
@@ -58,11 +58,12 @@ namespace
     }
 }
 
-Server::Server()
-    : m_listenSocket(INVALID_SOCKET),
+Server::Server(bool testMode):
+    m_listenSocket(INVALID_SOCKET),
     m_clientSocket(INVALID_SOCKET),
     m_state(Shared::ServerState::WAITING_FOR_CONNECTION),
-    m_isRunning(false)
+    m_isRunning(false),
+    m_testMode(testMode)
 {
     ZeroMemory(&m_wsaData, sizeof(m_wsaData));
     ZeroMemory(&m_serverAddress, sizeof(m_serverAddress));
@@ -70,7 +71,10 @@ Server::Server()
 
 Server::~Server()
 {
-    Stop();
+    if (!m_testMode)   
+    {
+        Stop();
+    }
 }
 // initializes winsock, creates socket, binds, and start listening
 bool Server::Start()
@@ -105,10 +109,13 @@ bool Server::Start()
     m_isRunning = true;
     SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
 
-    Shared::Logger::LogEvent(
-        Shared::SERVER_LOG_FILE,
-        "Server started"
-    );
+    if (!m_testMode)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Verification successful"
+        );
+    }
 
     std::cout << "Server started on port " << Shared::DEFAULT_SERVER_PORT << ".\n";
     return true;
@@ -116,6 +123,7 @@ bool Server::Start()
 // stops server, closes sockets, and clean up winsock
 void Server::Stop()
 {
+    if (m_testMode) return;
     m_isRunning = false;
     CloseClientSocket();
     CloseListenSocket();
@@ -140,10 +148,13 @@ void Server::Run()
 
         SetState(Shared::ServerState::CONNECTED);
 
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Client connected"
-        );
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Client connected"
+            );
+        }
 
         std::cout << "Client connected.\n";
 
@@ -153,10 +164,13 @@ void Server::Run()
 
             if (!ReceivePacket(packet))
             {
-                Shared::Logger::LogEvent(
-                    Shared::SERVER_LOG_FILE,
-                    "Client disconnected or packet receive failed"
-                );
+                if (!m_testMode)
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Client disconnected or packet receive failed"
+                    );
+                }   
 
                 std::cout << "Client disconnected or packet receive failed.\n";
                 break;
@@ -187,10 +201,13 @@ void Server::Run()
             {
                 if (!HandleTelemetryRequest())
                 {
-                    Shared::Logger::LogEvent(
-                        Shared::SERVER_LOG_FILE,
-                        "Telemetry transfer failed"
-                    );
+                    if (!m_testMode)
+                    {
+                        Shared::Logger::LogEvent(
+                            Shared::SERVER_LOG_FILE,
+                            "Telemetry transfer failed"
+                        );
+                    }
 
                     std::cout << "Telemetry transfer failed.\n";
                     break;
@@ -216,10 +233,13 @@ void Server::Run()
                 break;
 
             default:
-                Shared::Logger::LogEvent(
-                    Shared::SERVER_LOG_FILE,
-                    "Invalid command received"
-                );
+                if (!m_testMode)
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Invalid command received"
+                    );
+                }
 
                 response = Shared::PacketUtils::CreateTextPacket(
                     Shared::PacketType::ERROR_PACKET,
@@ -238,10 +258,13 @@ void Server::Run()
 
                 if (!SendPacket(ackPacket))
                 {
-                    Shared::Logger::LogEvent(
-                        Shared::SERVER_LOG_FILE,
-                        "Failed to send acknowledgement packet"
-                    );
+                    if (!m_testMode)
+                    {
+                        Shared::Logger::LogEvent(
+                            Shared::SERVER_LOG_FILE,
+                            "Failed to send acknowledgement packet"
+                        );
+                    }
 
                     std::cout << "Failed to send acknowledgement packet.\n";
                     break;
@@ -250,10 +273,13 @@ void Server::Run()
 
             if (!SendPacket(response))
             {
-                Shared::Logger::LogEvent(
-                    Shared::SERVER_LOG_FILE,
-                    "Failed to send response packet"
-                );
+                if (!m_testMode)
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Failed to send response packet"
+                    );
+                }
 
                 std::cout << "Failed to send response packet.\n";
                 break;
@@ -261,11 +287,13 @@ void Server::Run()
 
             if (packet.header.type == Shared::PacketType::DISCONNECT_REQUEST)
             {
-                Shared::Logger::LogEvent(
-                    Shared::SERVER_LOG_FILE,
-                    "Disconnect response sent"
-                );
-
+                if (!m_testMode)
+                {
+                    Shared::Logger::LogEvent(
+                        Shared::SERVER_LOG_FILE,
+                        "Disconnect response sent"
+                    );
+                }
                 std::cout << "Disconnect response sent.\n";
                 break;
             }
@@ -274,11 +302,13 @@ void Server::Run()
         CloseClientSocket();
         SetState(Shared::ServerState::WAITING_FOR_CONNECTION);
 
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Waiting for next client connection"
-        );
-
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Waiting for next client connection"
+            );
+        }
         std::cout << "Waiting for client connection...\n";
     }
 }
@@ -402,12 +432,14 @@ bool Server::ReceivePacket(Shared::Packet& outPacket)
     {
         return false;
     }
-
-    Shared::Logger::LogPacket(
-        Shared::SERVER_LOG_FILE,
-        outPacket,
-        Shared::LogDirection::RECEIVED
-    );
+    if (!m_testMode)
+    {
+        Shared::Logger::LogPacket(
+            Shared::SERVER_LOG_FILE,
+            outPacket,
+            Shared::LogDirection::RECEIVED
+        );
+    }
 
     return true;
 }
@@ -426,12 +458,14 @@ bool Server::SendPacket(const Shared::Packet& packet)
         return false;
     }
 
-    Shared::Logger::LogPacket(
-        Shared::SERVER_LOG_FILE,
-        packet,
-        Shared::LogDirection::SENT
-    );
-
+    if (!m_testMode)
+    {
+        Shared::Logger::LogPacket(
+            Shared::SERVER_LOG_FILE,
+            packet,
+            Shared::LogDirection::SENT
+        );
+    }
     return true;
 }
 // disconnect request handlin
@@ -442,12 +476,13 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
     if (token == Shared::EXPECTED_VERIFICATION_TOKEN)
     {
         SetState(Shared::ServerState::VERIFIED);
-
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Verification successful"
-        );
-
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Verification successful"
+            );
+        }
         return Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::VERIFY_RESPONSE,
             "Verification successful",
@@ -455,10 +490,13 @@ Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
         );
     }
 
-    Shared::Logger::LogEvent(
-        Shared::SERVER_LOG_FILE,
-        "Verification failed"
-    );
+    if (!m_testMode)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Verification failed"
+        );
+    }
 
     return Shared::PacketUtils::CreateTextPacket(
         Shared::PacketType::VERIFY_RESPONSE,
@@ -471,11 +509,13 @@ Shared::Packet Server::HandleSensorRequest()
 {
     if (!IsVerified())
     {
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Sensor request rejected: not verified"
-        );
-
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Sensor request rejected: not verified"
+            );
+        }
         return Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::ERROR_PACKET,
             "Sensor request rejected: client not verified",
@@ -487,10 +527,13 @@ Shared::Packet Server::HandleSensorRequest()
 
     const std::vector<Shared::SensorData> sensors = GenerateCurrentSensors();
 
-    Shared::Logger::LogEvent(
-        Shared::SERVER_LOG_FILE,
-        "Randomized sensor response generated"
-    );
+    if (!m_testMode)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Randomized sensor response generated"
+        );
+    }   
 
     return Shared::PacketUtils::CreateSensorResponsePacket(sensors);
 }
@@ -498,12 +541,13 @@ Shared::Packet Server::HandleSensorRequest()
 Shared::Packet Server::HandleDisconnectRequest()
 {
     SetState(Shared::ServerState::DISCONNECTING);
-
-    Shared::Logger::LogEvent(
-        Shared::SERVER_LOG_FILE,
-        "Valid disconnect request received"
-    );
-
+    if (!m_testMode)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Valid disconnect request received"
+        );
+    }
     return Shared::PacketUtils::CreateTextPacket(
         Shared::PacketType::DISCONNECT_RESPONSE,
         "Disconnect successful",
@@ -515,10 +559,13 @@ bool Server::HandleTelemetryRequest()
 {
     if (!IsVerified())
     {
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Telemetry request rejected: not verified"
-        );
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Telemetry request rejected: not verified"
+            );
+        }
 
         Shared::Packet errorPacket = Shared::PacketUtils::CreateTextPacket(
             Shared::PacketType::ERROR_PACKET,
@@ -531,10 +578,13 @@ bool Server::HandleTelemetryRequest()
 
     SetState(Shared::ServerState::TELEMETRY_TRANSFER);
 
-    Shared::Logger::LogEvent(
-        Shared::SERVER_LOG_FILE,
-        "Telemetry transfer started"
-    );
+    if (!m_testMode)
+    {
+        Shared::Logger::LogEvent(
+            Shared::SERVER_LOG_FILE,
+            "Telemetry transfer started"
+        );
+    }
 
     Shared::Packet ackPacket = Shared::PacketUtils::CreateSimplePacket(
         Shared::PacketType::ACK,
@@ -543,10 +593,13 @@ bool Server::HandleTelemetryRequest()
 
     if (!SendPacket(ackPacket))
     {
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Failed to send telemetry acknowledgement packet"
-        );
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Failed to send telemetry acknowledgement packet"
+            );
+        }
 
         SetState(Shared::ServerState::VERIFIED);
         return false;
@@ -558,12 +611,14 @@ bool Server::HandleTelemetryRequest()
 
     if (success)
     {
-        Shared::Logger::LogEvent(
-            Shared::SERVER_LOG_FILE,
-            "Telemetry transfer completed"
-        );
+        if (!m_testMode)
+        {
+            Shared::Logger::LogEvent(
+                Shared::SERVER_LOG_FILE,
+                "Telemetry transfer completed"
+            );
+        }
     }
-
     return success;
 }
 // Reads telemetry file and sends it in chunk packets until complete.
