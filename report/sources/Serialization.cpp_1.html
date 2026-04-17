@@ -1,0 +1,446 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII" />
+  <title>Serialization.cpp</title>
+  <link rel="stylesheet" href="../style.css"/>
+  <script src="../jquery-3.5.1.min.js"></script>
+</head>
+<body>
+<pre><code class = "cpp">
+<a name="ln1">#include &quot;Serialization.h&quot;</a>
+<a name="ln2"> </a>
+<a name="ln3">#include &lt;chrono&gt;</a>
+<a name="ln4">#include &lt;cstring&gt;</a>
+<a name="ln5">#include &lt;limits&gt;</a>
+<a name="ln6"> </a>
+<a name="ln7">#include &quot;Constants.h&quot;</a>
+<a name="ln8"> </a>
+<a name="ln9">namespace Shared</a>
+<a name="ln10">{</a>
+<a name="ln11">    namespace</a>
+<a name="ln12">    {</a>
+<a name="ln13">        constexpr std::size_t PACKET_HEADER_SIZE =</a>
+<a name="ln14">            sizeof(std::uint32_t) +  // PacketType</a>
+<a name="ln15">            sizeof(std::uint64_t) +  // timestamp</a>
+<a name="ln16">            sizeof(std::uint32_t) +  // payloadSize</a>
+<a name="ln17">            sizeof(std::uint32_t) +  // sensorCount</a>
+<a name="ln18">            sizeof(std::uint32_t);   // StatusCode</a>
+<a name="ln19">    }</a>
+<a name="ln20"> </a>
+<a name="ln21">    std::uint64_t Serialization::GetCurrentTimestamp()</a>
+<a name="ln22">    {</a>
+<a name="ln23">        const auto now = std::chrono::system_clock::now();</a>
+<a name="ln24">        const auto milliseconds = std::chrono::duration_cast&lt;std::chrono::milliseconds&gt;(now.time_since_epoch());</a>
+<a name="ln25">        return static_cast&lt;std::uint64_t&gt;(milliseconds.count());</a>
+<a name="ln26">    }</a>
+<a name="ln27"> </a>
+<a name="ln28">    std::size_t Serialization::GetPacketHeaderSize()</a>
+<a name="ln29">    {</a>
+<a name="ln30">        return PACKET_HEADER_SIZE;</a>
+<a name="ln31">    }</a>
+<a name="ln32"> </a>
+<a name="ln33">    bool Serialization::ValidatePayloadSize(std::size_t payloadSize)</a>
+<a name="ln34">    {</a>
+<a name="ln35">        return payloadSize &lt;= MAX_PAYLOAD_SIZE;</a>
+<a name="ln36">    }</a>
+<a name="ln37"> </a>
+<a name="ln38">    bool Serialization::SerializePacketHeader(const PacketHeader&amp; header, std::vector&lt;std::uint8_t&gt;&amp; outBuffer)</a>
+<a name="ln39">    {</a>
+<a name="ln40">        outBuffer.clear();</a>
+<a name="ln41">        outBuffer.reserve(PACKET_HEADER_SIZE);</a>
+<a name="ln42"> </a>
+<a name="ln43">        if (!WriteUInt32(outBuffer, static_cast&lt;std::uint32_t&gt;(header.type)))</a>
+<a name="ln44">        {</a>
+<a name="ln45">            return false;</a>
+<a name="ln46">        }</a>
+<a name="ln47"> </a>
+<a name="ln48">        if (!WriteUInt64(outBuffer, header.timestamp))</a>
+<a name="ln49">        {</a>
+<a name="ln50">            return false;</a>
+<a name="ln51">        }</a>
+<a name="ln52"> </a>
+<a name="ln53">        if (!WriteUInt32(outBuffer, header.payloadSize))</a>
+<a name="ln54">        {</a>
+<a name="ln55">            return false;</a>
+<a name="ln56">        }</a>
+<a name="ln57"> </a>
+<a name="ln58">        if (!WriteUInt32(outBuffer, header.sensorCount))</a>
+<a name="ln59">        {</a>
+<a name="ln60">            return false;</a>
+<a name="ln61">        }</a>
+<a name="ln62"> </a>
+<a name="ln63">        if (!WriteUInt32(outBuffer, static_cast&lt;std::uint32_t&gt;(header.status)))</a>
+<a name="ln64">        {</a>
+<a name="ln65">            return false;</a>
+<a name="ln66">        }</a>
+<a name="ln67"> </a>
+<a name="ln68">        return true;</a>
+<a name="ln69">    }</a>
+<a name="ln70"> </a>
+<a name="ln71">    bool Serialization::DeserializePacketHeader(const std::vector&lt;std::uint8_t&gt;&amp; buffer, PacketHeader&amp; outHeader)</a>
+<a name="ln72">    {</a>
+<a name="ln73">        if (buffer.size() &lt; PACKET_HEADER_SIZE)</a>
+<a name="ln74">        {</a>
+<a name="ln75">            return false;</a>
+<a name="ln76">        }</a>
+<a name="ln77"> </a>
+<a name="ln78">        std::size_t offset = 0;</a>
+<a name="ln79">        std::uint32_t rawType = 0;</a>
+<a name="ln80">        std::uint32_t rawStatus = 0;</a>
+<a name="ln81"> </a>
+<a name="ln82">        if (!ReadUInt32(buffer, offset, rawType))</a>
+<a name="ln83">        {</a>
+<a name="ln84">            return false;</a>
+<a name="ln85">        }</a>
+<a name="ln86"> </a>
+<a name="ln87">        if (!ReadUInt64(buffer, offset, outHeader.timestamp))</a>
+<a name="ln88">        {</a>
+<a name="ln89">            return false;</a>
+<a name="ln90">        }</a>
+<a name="ln91"> </a>
+<a name="ln92">        if (!ReadUInt32(buffer, offset, outHeader.payloadSize))</a>
+<a name="ln93">        {</a>
+<a name="ln94">            return false;</a>
+<a name="ln95">        }</a>
+<a name="ln96"> </a>
+<a name="ln97">        if (!ReadUInt32(buffer, offset, outHeader.sensorCount))</a>
+<a name="ln98">        {</a>
+<a name="ln99">            return false;</a>
+<a name="ln100">        }</a>
+<a name="ln101"> </a>
+<a name="ln102">        if (!ReadUInt32(buffer, offset, rawStatus))</a>
+<a name="ln103">        {</a>
+<a name="ln104">            return false;</a>
+<a name="ln105">        }</a>
+<a name="ln106"> </a>
+<a name="ln107">        outHeader.type = static_cast&lt;PacketType&gt;(rawType);</a>
+<a name="ln108">        outHeader.status = static_cast&lt;StatusCode&gt;(rawStatus);</a>
+<a name="ln109"> </a>
+<a name="ln110">        return true;</a>
+<a name="ln111">    }</a>
+<a name="ln112"> </a>
+<a name="ln113">    bool Serialization::SerializePacket(const Packet&amp; packet, std::vector&lt;std::uint8_t&gt;&amp; outBuffer)</a>
+<a name="ln114">    {</a>
+<a name="ln115">        if (!packet.IsValid()) // header/payload mismatch</a>
+<a name="ln116">        {</a>
+<a name="ln117">            return false;</a>
+<a name="ln118">        }</a>
+<a name="ln119"> </a>
+<a name="ln120">        if (!ValidatePayloadSize(packet.payload.size())) // size guard</a>
+<a name="ln121">        {</a>
+<a name="ln122">            return false;</a>
+<a name="ln123">        }</a>
+<a name="ln124"> </a>
+<a name="ln125">        std::vector&lt;std::uint8_t&gt; headerBytes;</a>
+<a name="ln126">        if (!SerializePacketHeader(packet.header, headerBytes))</a>
+<a name="ln127">        {</a>
+<a name="ln128">            return false;</a>
+<a name="ln129">        }</a>
+<a name="ln130"> </a>
+<a name="ln131">        outBuffer.clear();</a>
+<a name="ln132">        outBuffer.reserve(headerBytes.size() + packet.payload.size());</a>
+<a name="ln133"> </a>
+<a name="ln134">        outBuffer.insert(outBuffer.end(), headerBytes.begin(), headerBytes.end());</a>
+<a name="ln135">        outBuffer.insert(outBuffer.end(), packet.payload.begin(), packet.payload.end());</a>
+<a name="ln136"> </a>
+<a name="ln137">        return true;</a>
+<a name="ln138">    }</a>
+<a name="ln139"> </a>
+<a name="ln140">    bool Serialization::DeserializePacket(const std::vector&lt;std::uint8_t&gt;&amp; buffer, Packet&amp; outPacket)</a>
+<a name="ln141">    {</a>
+<a name="ln142">        if (buffer.size() &lt; PACKET_HEADER_SIZE)</a>
+<a name="ln143">        {</a>
+<a name="ln144">            return false;</a>
+<a name="ln145">        }</a>
+<a name="ln146"> </a>
+<a name="ln147">        std::vector&lt;std::uint8_t&gt; headerBytes(buffer.begin(), buffer.begin() + PACKET_HEADER_SIZE);</a>
+<a name="ln148">        if (!DeserializePacketHeader(headerBytes, outPacket.header))</a>
+<a name="ln149">        {</a>
+<a name="ln150">            return false;</a>
+<a name="ln151">        }</a>
+<a name="ln152"> </a>
+<a name="ln153">        if (!ValidatePayloadSize(outPacket.header.payloadSize))</a>
+<a name="ln154">        {</a>
+<a name="ln155">            return false;</a>
+<a name="ln156">        }</a>
+<a name="ln157"> </a>
+<a name="ln158">        const std::size_t expectedTotalSize = PACKET_HEADER_SIZE + outPacket.header.payloadSize;</a>
+<a name="ln159">        if (buffer.size() != expectedTotalSize) // reject malformed packet</a>
+<a name="ln160">        {</a>
+<a name="ln161">            return false;</a>
+<a name="ln162">        }</a>
+<a name="ln163"> </a>
+<a name="ln164">        outPacket.payload.assign(buffer.begin() + PACKET_HEADER_SIZE, buffer.end());</a>
+<a name="ln165"> </a>
+<a name="ln166">        return outPacket.IsValid();</a>
+<a name="ln167">    }</a>
+<a name="ln168"> </a>
+<a name="ln169">    bool Serialization::SerializeSensorDataList(const std::vector&lt;SensorData&gt;&amp; sensors, std::vector&lt;std::uint8_t&gt;&amp; outBuffer)</a>
+<a name="ln170">    {</a>
+<a name="ln171">        outBuffer.clear();</a>
+<a name="ln172"> </a>
+<a name="ln173">        if (sensors.size() &gt; static_cast&lt;std::size_t&gt;(std::numeric_limits&lt;std::uint32_t&gt;::max()))</a>
+<a name="ln174">        {</a>
+<a name="ln175">            return false;</a>
+<a name="ln176">        }</a>
+<a name="ln177"> </a>
+<a name="ln178">        if (!WriteUInt32(outBuffer, static_cast&lt;std::uint32_t&gt;(sensors.size())))</a>
+<a name="ln179">        {</a>
+<a name="ln180">            return false;</a>
+<a name="ln181">        }</a>
+<a name="ln182"> </a>
+<a name="ln183">        for (const SensorData&amp; sensor : sensors)</a>
+<a name="ln184">        {</a>
+<a name="ln185">            if (sensor.name.size() &gt; MAX_SENSOR_NAME_LENGTH)</a>
+<a name="ln186">            {</a>
+<a name="ln187">                return false;</a>
+<a name="ln188">            }</a>
+<a name="ln189"> </a>
+<a name="ln190">            if (sensor.unit.size() &gt; MAX_SENSOR_UNIT_LENGTH)</a>
+<a name="ln191">            {</a>
+<a name="ln192">                return false;</a>
+<a name="ln193">            }</a>
+<a name="ln194"> </a>
+<a name="ln195">            if (!WriteString(outBuffer, sensor.name))</a>
+<a name="ln196">            {</a>
+<a name="ln197">                return false;</a>
+<a name="ln198">            }</a>
+<a name="ln199"> </a>
+<a name="ln200">            if (!WriteDouble(outBuffer, sensor.value))</a>
+<a name="ln201">            {</a>
+<a name="ln202">                return false;</a>
+<a name="ln203">            }</a>
+<a name="ln204"> </a>
+<a name="ln205">            if (!WriteString(outBuffer, sensor.unit))</a>
+<a name="ln206">            {</a>
+<a name="ln207">                return false;</a>
+<a name="ln208">            }</a>
+<a name="ln209"> </a>
+<a name="ln210">            if (!WriteUInt64(outBuffer, sensor.timestamp))</a>
+<a name="ln211">            {</a>
+<a name="ln212">                return false;</a>
+<a name="ln213">            }</a>
+<a name="ln214">        }</a>
+<a name="ln215"> </a>
+<a name="ln216">        return ValidatePayloadSize(outBuffer.size());</a>
+<a name="ln217">    }</a>
+<a name="ln218"> </a>
+<a name="ln219">    bool Serialization::DeserializeSensorDataList(const std::vector&lt;std::uint8_t&gt;&amp; buffer, std::vector&lt;SensorData&gt;&amp; outSensors)</a>
+<a name="ln220">    {</a>
+<a name="ln221">        outSensors.clear();</a>
+<a name="ln222"> </a>
+<a name="ln223">        std::size_t offset = 0;</a>
+<a name="ln224">        std::uint32_t sensorCount = 0;</a>
+<a name="ln225"> </a>
+<a name="ln226">        if (!ReadUInt32(buffer, offset, sensorCount))</a>
+<a name="ln227">        {</a>
+<a name="ln228">            return false;</a>
+<a name="ln229">        }</a>
+<a name="ln230"> </a>
+<a name="ln231">        for (std::uint32_t i = 0; i &lt; sensorCount; ++i)</a>
+<a name="ln232">        {</a>
+<a name="ln233">            SensorData sensor;</a>
+<a name="ln234"> </a>
+<a name="ln235">            if (!ReadString(buffer, offset, sensor.name))</a>
+<a name="ln236">            {</a>
+<a name="ln237">                return false;</a>
+<a name="ln238">            }</a>
+<a name="ln239"> </a>
+<a name="ln240">            if (sensor.name.size() &gt; MAX_SENSOR_NAME_LENGTH)</a>
+<a name="ln241">            {</a>
+<a name="ln242">                return false;</a>
+<a name="ln243">            }</a>
+<a name="ln244"> </a>
+<a name="ln245">            if (!ReadDouble(buffer, offset, sensor.value))</a>
+<a name="ln246">            {</a>
+<a name="ln247">                return false;</a>
+<a name="ln248">            }</a>
+<a name="ln249"> </a>
+<a name="ln250">            if (!ReadString(buffer, offset, sensor.unit))</a>
+<a name="ln251">            {</a>
+<a name="ln252">                return false;</a>
+<a name="ln253">            }</a>
+<a name="ln254"> </a>
+<a name="ln255">            if (sensor.unit.size() &gt; MAX_SENSOR_UNIT_LENGTH)</a>
+<a name="ln256">            {</a>
+<a name="ln257">                return false;</a>
+<a name="ln258">            }</a>
+<a name="ln259"> </a>
+<a name="ln260">            if (!ReadUInt64(buffer, offset, sensor.timestamp))</a>
+<a name="ln261">            {</a>
+<a name="ln262">                return false;</a>
+<a name="ln263">            }</a>
+<a name="ln264"> </a>
+<a name="ln265">            outSensors.push_back(sensor);</a>
+<a name="ln266">        }</a>
+<a name="ln267"> </a>
+<a name="ln268">        return offset == buffer.size();</a>
+<a name="ln269">    }</a>
+<a name="ln270"> </a>
+<a name="ln271">    bool Serialization::BuildTextPayload(const std::string&amp; text, std::vector&lt;std::uint8_t&gt;&amp; outPayload)</a>
+<a name="ln272">    {</a>
+<a name="ln273">        if (!ValidatePayloadSize(text.size()))</a>
+<a name="ln274">        {</a>
+<a name="ln275">            return false;</a>
+<a name="ln276">        }</a>
+<a name="ln277"> </a>
+<a name="ln278">        outPayload.assign(text.begin(), text.end());</a>
+<a name="ln279">        return true;</a>
+<a name="ln280">    }</a>
+<a name="ln281"> </a>
+<a name="ln282">    std::string Serialization::ExtractTextPayload(const std::vector&lt;std::uint8_t&gt;&amp; payload)</a>
+<a name="ln283">    {</a>
+<a name="ln284">        return std::string(payload.begin(), payload.end());</a>
+<a name="ln285">    }</a>
+<a name="ln286"> </a>
+<a name="ln287">    bool Serialization::WriteUInt32(std::vector&lt;std::uint8_t&gt;&amp; buffer, std::uint32_t value)</a>
+<a name="ln288">    {</a>
+<a name="ln289">        const std::uint8_t* bytes = reinterpret_cast&lt;const std::uint8_t*&gt;(&amp;value);</a>
+<a name="ln290">        buffer.insert(buffer.end(), bytes, bytes + sizeof(value));</a>
+<a name="ln291">        return true;</a>
+<a name="ln292">    }</a>
+<a name="ln293"> </a>
+<a name="ln294">    bool Serialization::WriteUInt64(std::vector&lt;std::uint8_t&gt;&amp; buffer, std::uint64_t value)</a>
+<a name="ln295">    {</a>
+<a name="ln296">        const std::uint8_t* bytes = reinterpret_cast&lt;const std::uint8_t*&gt;(&amp;value);</a>
+<a name="ln297">        buffer.insert(buffer.end(), bytes, bytes + sizeof(value));</a>
+<a name="ln298">        return true;</a>
+<a name="ln299">    }</a>
+<a name="ln300"> </a>
+<a name="ln301">    bool Serialization::WriteDouble(std::vector&lt;std::uint8_t&gt;&amp; buffer, double value)</a>
+<a name="ln302">    {</a>
+<a name="ln303">        const std::uint8_t* bytes = reinterpret_cast&lt;const std::uint8_t*&gt;(&amp;value);</a>
+<a name="ln304">        buffer.insert(buffer.end(), bytes, bytes + sizeof(value));</a>
+<a name="ln305">        return true;</a>
+<a name="ln306">    }</a>
+<a name="ln307"> </a>
+<a name="ln308">    bool Serialization::WriteString(std::vector&lt;std::uint8_t&gt;&amp; buffer, const std::string&amp; value)</a>
+<a name="ln309">    {</a>
+<a name="ln310">        if (value.size() &gt; static_cast&lt;std::size_t&gt;(std::numeric_limits&lt;std::uint32_t&gt;::max()))</a>
+<a name="ln311">        {</a>
+<a name="ln312">            return false;</a>
+<a name="ln313">        }</a>
+<a name="ln314"> </a>
+<a name="ln315">        if (!WriteUInt32(buffer, static_cast&lt;std::uint32_t&gt;(value.size())))</a>
+<a name="ln316">        {</a>
+<a name="ln317">            return false;</a>
+<a name="ln318">        }</a>
+<a name="ln319"> </a>
+<a name="ln320">        buffer.insert(buffer.end(), value.begin(), value.end());</a>
+<a name="ln321">        return true;</a>
+<a name="ln322">    }</a>
+<a name="ln323"> </a>
+<a name="ln324">    bool Serialization::ReadUInt32(const std::vector&lt;std::uint8_t&gt;&amp; buffer, std::size_t&amp; offset, std::uint32_t&amp; value)</a>
+<a name="ln325">    {</a>
+<a name="ln326">        if (offset + sizeof(value) &gt; buffer.size())</a>
+<a name="ln327">        {</a>
+<a name="ln328">            return false;</a>
+<a name="ln329">        }</a>
+<a name="ln330"> </a>
+<a name="ln331">        std::memcpy(&amp;value, buffer.data() + offset, sizeof(value));</a>
+<a name="ln332">        offset += sizeof(value);</a>
+<a name="ln333">        return true;</a>
+<a name="ln334">    }</a>
+<a name="ln335"> </a>
+<a name="ln336">    bool Serialization::ReadUInt64(const std::vector&lt;std::uint8_t&gt;&amp; buffer, std::size_t&amp; offset, std::uint64_t&amp; value)</a>
+<a name="ln337">    {</a>
+<a name="ln338">        if (offset + sizeof(value) &gt; buffer.size())</a>
+<a name="ln339">        {</a>
+<a name="ln340">            return false;</a>
+<a name="ln341">        }</a>
+<a name="ln342"> </a>
+<a name="ln343">        std::memcpy(&amp;value, buffer.data() + offset, sizeof(value));</a>
+<a name="ln344">        offset += sizeof(value);</a>
+<a name="ln345">        return true;</a>
+<a name="ln346">    }</a>
+<a name="ln347"> </a>
+<a name="ln348">    bool Serialization::ReadDouble(const std::vector&lt;std::uint8_t&gt;&amp; buffer, std::size_t&amp; offset, double&amp; value)</a>
+<a name="ln349">    {</a>
+<a name="ln350">        if (offset + sizeof(value) &gt; buffer.size())</a>
+<a name="ln351">        {</a>
+<a name="ln352">            return false;</a>
+<a name="ln353">        }</a>
+<a name="ln354"> </a>
+<a name="ln355">        std::memcpy(&amp;value, buffer.data() + offset, sizeof(value));</a>
+<a name="ln356">        offset += sizeof(value);</a>
+<a name="ln357">        return true;</a>
+<a name="ln358">    }</a>
+<a name="ln359"> </a>
+<a name="ln360">    bool Serialization::ReadString(const std::vector&lt;std::uint8_t&gt;&amp; buffer, std::size_t&amp; offset, std::string&amp; value)</a>
+<a name="ln361">    {</a>
+<a name="ln362">        std::uint32_t length = 0;</a>
+<a name="ln363"> </a>
+<a name="ln364">        if (!ReadUInt32(buffer, offset, length))</a>
+<a name="ln365">        {</a>
+<a name="ln366">            return false;</a>
+<a name="ln367">        }</a>
+<a name="ln368"> </a>
+<a name="ln369">        if (offset + length &gt; buffer.size())</a>
+<a name="ln370">        {</a>
+<a name="ln371">            return false;</a>
+<a name="ln372">        }</a>
+<a name="ln373"> </a>
+<a name="ln374">        value.assign(reinterpret_cast&lt;const char*&gt;(buffer.data() + offset), length);</a>
+<a name="ln375">        offset += length;</a>
+<a name="ln376">        return true;</a>
+<a name="ln377">    }</a>
+<a name="ln378">}</a>
+</code></pre>
+<div class="balloon" rel="38"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="71"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="113"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="140"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="169"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="219"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="271"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="308"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="324"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="336"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="348"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="360"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2506/" target="_blank">V2506</a> A function should have a single point of exit at the end.</p></div>
+<div class="balloon" rel="134"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="135"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="290"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="297"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="304"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="320"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'insert' should be used.</p></div>
+<div class="balloon" rel="331"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'memcpy' should be used.</p></div>
+<div class="balloon" rel="343"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'memcpy' should be used.</p></div>
+<div class="balloon" rel="355"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'memcpy' should be used.</p></div>
+<div class="balloon" rel="374"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2547/" target="_blank">V2547</a> The return value of non-void function 'assign' should be used.</p></div>
+<div class="balloon" rel="290"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="297"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="304"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="331"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="343"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="355"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<div class="balloon" rel="374"><p><span style="font-size:18px">&uarr;</span> <a href="https://pvs-studio.com/en/docs/warnings/v2563/" target="_blank">V2563</a> Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</p></div>
+<link rel="stylesheet" href="highlight.css">
+<script src="highlight.pack.js"></script>
+<script src="highlightjs-line-numbers.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<script>hljs.initLineNumbersOnLoad();</script>
+<script>
+  $(document).ready(function() {
+      $('.balloon').each(function () {
+          var bl = $(this);
+          var line = bl.attr('rel');
+          var text = $('a[name="ln'+line+'"]').text();
+
+          var space_count = 0;
+          for(var i = 0; i<text.length; i++){
+              var char = text[i];
+              if((char !== ' ')&&(char !== '\t'))break;
+              if(char === '\t')space_count++;
+              space_count++;
+          }
+
+          bl.css('margin-left', space_count*8);
+          $('a[name="ln'+line+'"]').after(bl);
+      });
+
+      window.location = window.location;
+  });
+</script>
+</body>
+</html>

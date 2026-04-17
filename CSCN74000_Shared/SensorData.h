@@ -5,6 +5,7 @@
 
 namespace Shared
 {
+    // Represents one sensor reading with value, unit, and timestamp.
     struct SensorData
     {
         std::string name;
@@ -17,14 +18,15 @@ namespace Shared
         {
         }
 
+        // Convenience constructor for quickly creating a sensor record.
         SensorData(const std::string& sensorName,
             double sensorValue,
             const std::string& sensorUnit,
             std::uint64_t sensorTimestamp)
             : name(sensorName),
-            value(sensorValue),
-            unit(sensorUnit),
-            timestamp(sensorTimestamp)
+              value(sensorValue),
+              unit(sensorUnit),
+              timestamp(sensorTimestamp)
         {
         }
     };

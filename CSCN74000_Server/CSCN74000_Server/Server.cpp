@@ -14,6 +14,8 @@
 
 namespace
 {
+// Generates a random double value between given range (used for mock sensor data).
+
     double RandomInRange(double minValue, double maxValue)
     {
         static std::random_device rd;
@@ -21,6 +23,7 @@ namespace
         std::uniform_real_distribution<double> dist(minValue, maxValue);
         return dist(gen);
     }
+    // Generates a list of simulated aircraft sensor data with realistic ranges.
 
     std::vector<Shared::SensorData> GenerateCurrentSensors()
     {
@@ -69,7 +72,7 @@ Server::~Server()
 {
     Stop();
 }
-
+// initializes winsock, creates socket, binds, and start listening
 bool Server::Start()
 {
     if (!InitializeWinsock())
@@ -110,7 +113,7 @@ bool Server::Start()
     std::cout << "Server started on port " << Shared::DEFAULT_SERVER_PORT << ".\n";
     return true;
 }
-
+// stops server, closes sockets, and clean up winsock
 void Server::Stop()
 {
     m_isRunning = false;
@@ -118,7 +121,7 @@ void Server::Stop()
     CloseListenSocket();
     CleanupWinsock();
 }
-
+// main sever loop
 void Server::Run()
 {
     if (!m_isRunning)
@@ -279,18 +282,18 @@ void Server::Run()
         std::cout << "Waiting for client connection...\n";
     }
 }
-
+// starts winsock API
 bool Server::InitializeWinsock()
 {
     return WSAStartup(MAKEWORD(2, 2), &m_wsaData) == 0;
 }
-
+// listening socket creation
 bool Server::CreateListenSocket()
 {
     m_listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     return m_listenSocket != INVALID_SOCKET;
 }
-
+// socket binding
 bool Server::BindSocket()
 {
     m_serverAddress.sin_family = AF_INET;
@@ -304,19 +307,19 @@ bool Server::BindSocket()
 
     return result != SOCKET_ERROR;
 }
-
+// puts socket into listening mode for incoming connections
 bool Server::ListenForClient()
 {
     return listen(m_listenSocket, SOMAXCONN) != SOCKET_ERROR;
 }
-
+// accepting incoming connections and creating client socket
 bool Server::AcceptClient()
 {
     std::cout << "Waiting for client connection...\n";
     m_clientSocket = accept(m_listenSocket, nullptr, nullptr);
     return m_clientSocket != INVALID_SOCKET;
 }
-
+//Helper: ensure complete reception of expected number of bytes.
 bool Server::ReceiveAll(char* buffer, int totalBytes)
 {
     int bytesReceived = 0;
@@ -339,7 +342,7 @@ bool Server::ReceiveAll(char* buffer, int totalBytes)
 
     return true;
 }
-
+// Helper: Ensure complete sendign of all bytes
 bool Server::SendAll(const char* buffer, int totalBytes)
 {
     int bytesSent = 0;
@@ -362,7 +365,7 @@ bool Server::SendAll(const char* buffer, int totalBytes)
 
     return true;
 }
-
+// receives and recontstructs full pakcet form client
 bool Server::ReceivePacket(Shared::Packet& outPacket)
 {
     const std::size_t headerSize = Shared::Serialization::GetPacketHeaderSize();
@@ -408,7 +411,7 @@ bool Server::ReceivePacket(Shared::Packet& outPacket)
 
     return true;
 }
-
+// serializes and send packet to client.
 bool Server::SendPacket(const Shared::Packet& packet)
 {
     std::vector<std::uint8_t> serializedPacket;
@@ -431,7 +434,7 @@ bool Server::SendPacket(const Shared::Packet& packet)
 
     return true;
 }
-
+// disconnect request handlin
 Shared::Packet Server::HandleVerification(const Shared::Packet& packet)
 {
     std::string token = Shared::Serialization::ExtractTextPayload(packet.payload);
@@ -507,7 +510,7 @@ Shared::Packet Server::HandleDisconnectRequest()
         Shared::StatusCode::SUCCESS
     );
 }
-
+// Validates verification → sends ACK → streams telemetry file in chunks.
 bool Server::HandleTelemetryRequest()
 {
     if (!IsVerified())
@@ -563,7 +566,7 @@ bool Server::HandleTelemetryRequest()
 
     return success;
 }
-
+// Reads telemetry file and sends it in chunk packets until complete.
 bool Server::SendTelemetryFile()
 {
     std::ifstream file(Shared::TELEMETRY_FILE_PATH, std::ios::binary);

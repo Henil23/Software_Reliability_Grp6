@@ -2,7 +2,7 @@ import csv
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
-
+# this file creates a file (>1 MB) with arbitary data
 OUTPUT_FILE = Path("data/telemetry_log.txt")
 TARGET_SIZE_BYTES = 1_300_000  # safely above 1 MB
 START_TIME = datetime(2026, 3, 30, 12, 0, 0)

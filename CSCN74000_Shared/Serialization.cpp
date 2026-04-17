@@ -10,6 +10,7 @@ namespace Shared
 {
     namespace
     {
+        // Fixed size of packet header when serialized into bytes.
         constexpr std::size_t PACKET_HEADER_SIZE =
             sizeof(std::uint32_t) +  // PacketType
             sizeof(std::uint64_t) +  // timestamp
@@ -18,6 +19,7 @@ namespace Shared
             sizeof(std::uint32_t);   // StatusCode
     }
 
+    // Returns current time in milliseconds for packet timestamps.
     std::uint64_t Serialization::GetCurrentTimestamp()
     {
         const auto now = std::chrono::system_clock::now();
@@ -25,16 +27,19 @@ namespace Shared
         return static_cast<std::uint64_t>(milliseconds.count());
     }
 
+    // Returns the byte size of a serialized packet header.
     std::size_t Serialization::GetPacketHeaderSize()
     {
         return PACKET_HEADER_SIZE;
     }
 
+    // Ensures payload does not exceed allowed maximum size.
     bool Serialization::ValidatePayloadSize(std::size_t payloadSize)
     {
         return payloadSize <= MAX_PAYLOAD_SIZE;
     }
 
+    // Serializes header fields into a byte buffer.
     bool Serialization::SerializePacketHeader(const PacketHeader& header, std::vector<std::uint8_t>& outBuffer)
     {
         outBuffer.clear();
@@ -68,6 +73,7 @@ namespace Shared
         return true;
     }
 
+    // Reads header fields from a byte buffer into a PacketHeader object.
     bool Serialization::DeserializePacketHeader(const std::vector<std::uint8_t>& buffer, PacketHeader& outHeader)
     {
         if (buffer.size() < PACKET_HEADER_SIZE)
@@ -110,14 +116,15 @@ namespace Shared
         return true;
     }
 
+    // Serializes a complete packet (header + payload) into bytes.
     bool Serialization::SerializePacket(const Packet& packet, std::vector<std::uint8_t>& outBuffer)
     {
-        if (!packet.IsValid()) // header/payload mismatch
+        if (!packet.IsValid()) // Header and payload size must match
         {
             return false;
         }
 
-        if (!ValidatePayloadSize(packet.payload.size())) // size guard
+        if (!ValidatePayloadSize(packet.payload.size())) // Prevent oversized payloads
         {
             return false;
         }
@@ -137,6 +144,7 @@ namespace Shared
         return true;
     }
 
+    // Deserializes raw bytes into a complete Packet object.
     bool Serialization::DeserializePacket(const std::vector<std::uint8_t>& buffer, Packet& outPacket)
     {
         if (buffer.size() < PACKET_HEADER_SIZE)
@@ -156,7 +164,7 @@ namespace Shared
         }
 
         const std::size_t expectedTotalSize = PACKET_HEADER_SIZE + outPacket.header.payloadSize;
-        if (buffer.size() != expectedTotalSize) // reject malformed packet
+        if (buffer.size() != expectedTotalSize) // Reject malformed packets
         {
             return false;
         }
@@ -166,6 +174,7 @@ namespace Shared
         return outPacket.IsValid();
     }
 
+    // Serializes a list of sensor readings into payload bytes.
     bool Serialization::SerializeSensorDataList(const std::vector<SensorData>& sensors, std::vector<std::uint8_t>& outBuffer)
     {
         outBuffer.clear();
@@ -216,6 +225,7 @@ namespace Shared
         return ValidatePayloadSize(outBuffer.size());
     }
 
+    // Deserializes payload bytes back into a list of sensor readings.
     bool Serialization::DeserializeSensorDataList(const std::vector<std::uint8_t>& buffer, std::vector<SensorData>& outSensors)
     {
         outSensors.clear();
@@ -268,6 +278,7 @@ namespace Shared
         return offset == buffer.size();
     }
 
+    // Builds a text payload from a string.
     bool Serialization::BuildTextPayload(const std::string& text, std::vector<std::uint8_t>& outPayload)
     {
         if (!ValidatePayloadSize(text.size()))
@@ -279,11 +290,13 @@ namespace Shared
         return true;
     }
 
+    // Extracts string data from a text payload.
     std::string Serialization::ExtractTextPayload(const std::vector<std::uint8_t>& payload)
     {
         return std::string(payload.begin(), payload.end());
     }
 
+    // Low-level write helpers used during serialization.
     bool Serialization::WriteUInt32(std::vector<std::uint8_t>& buffer, std::uint32_t value)
     {
         const std::uint8_t* bytes = reinterpret_cast<const std::uint8_t*>(&value);
@@ -321,6 +334,7 @@ namespace Shared
         return true;
     }
 
+    // Low-level read helpers used during deserialization.
     bool Serialization::ReadUInt32(const std::vector<std::uint8_t>& buffer, std::size_t& offset, std::uint32_t& value)
     {
         if (offset + sizeof(value) > buffer.size())

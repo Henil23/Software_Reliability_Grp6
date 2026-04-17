@@ -1,0 +1,336 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>PVS-Studio HTML Report</title>
+<style type="text/css">
+   TABLE {
+    width: 100%;
+   }
+   #col_group, #col_level, #col_code, #col_cwe, #col_sast {
+    text-align: center;
+    white-space: nowrap;
+    width: 0;
+   }
+   #col_file, #col_info, #col_projects {
+    white-space: nowrap;
+    text-align: left;
+    width: 0;
+   }
+   #col_info {
+    width: 120px;
+   }
+   #col_message {
+    text-align: left;
+   }
+  </style>
+<link rel="stylesheet" href="style.css" />
+<script type="text/javascript" src="script.js"></script>
+<script type="text/javascript" src="toggle-cell.js"></script>
+</head>
+<body>
+  <div class="header">
+    <img src="images/logo.png" alt=""/>
+    <h1>PVS-Studio Analysis Results</h1>
+    <br class="clear">
+  </div>
+  <table cellpadding="0" cellspacing="0" border="0" class="infotopic">
+     <tr><th id="col_info">Date:</th><td>Tue Apr 14 13:55:13 2026</td></tr>
+     <tr><th id="col_info">PVS-Studio Version:</th><td>7.41.103683.741</td></tr>
+     <tr><th id="col_info">Command Line:</th><td>plog-converter -t fullhtml -a GA\:1,2\;MISRA\:1,2,3 -I CSCN74000_Client\;CSCN74000_Server\;CSCN74000_Shared PVS-Studio.log -o report </td></tr>
+     <tr><th id="col_info">Total Warnings (MISRA):</th><td>39</td></tr>
+  </table>
+  <div class="toggle-box">
+    <label>
+      Show full paths
+    <input class="path-toggle toggle-button" type="checkbox" name="toggle-path" onclick="togglePathView()" />
+    </label>
+  </div>
+  <table cellpadding="0" cellspacing="0" border="0" class="sortable" id="sorter">
+    <tr>
+      <th class="gsort">Group</th>
+      <th class="fsort">Location</th>
+      <th class="lsort">Level</th>
+      <th class="vsort">Code</th>
+      <th>Message</th>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln30">Logger.cpp:30</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln30">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:30</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">The 'return' statement should be the last statement of a function.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln61">Logger.cpp:61</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln61">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:61</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">The 'return' statement should be the last statement of a function.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln78">Logger.cpp:78</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln78">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:78</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln93">Logger.cpp:93</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln93">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:93</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln124">Logger.cpp:124</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln124">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:124</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln80">Logger.cpp:80</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln80">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:80</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2520/">V2520</td>
+      <td id="col_message">Every switch-clause should be terminated by an unconditional 'break' or 'throw' statement.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln95">Logger.cpp:95</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln95">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:95</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2520/">V2520</td>
+      <td id="col_message">Every switch-clause should be terminated by an unconditional 'break' or 'throw' statement.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln126">Logger.cpp:126</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln126">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:126</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2520/">V2520</td>
+      <td id="col_message">Every switch-clause should be terminated by an unconditional 'break' or 'throw' statement.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln23">Logger.cpp:23</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln23">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:23</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2578/">V2578</td>
+      <td id="col_message">The string literal should not decay to a pointer to char. Consider inspecting the second function argument.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Logger.cpp_0.html#ln14">Logger.cpp:14</a><a target="_blank" class="file-link display-none" href="sources/Logger.cpp_0.html#ln14">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Logger.cpp:14</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2608/">V2608</td>
+      <td id="col_message">The 'static' storage class specifier should be used in all declarations of functions that have internal linkage.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln38">Serialization.cpp:38</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln38">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:38</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln71">Serialization.cpp:71</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln71">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:71</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln113">Serialization.cpp:113</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln113">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:113</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln140">Serialization.cpp:140</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln140">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:140</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln169">Serialization.cpp:169</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln169">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:169</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln219">Serialization.cpp:219</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln219">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:219</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln271">Serialization.cpp:271</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln271">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:271</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln308">Serialization.cpp:308</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln308">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:308</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln324">Serialization.cpp:324</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln324">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:324</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln336">Serialization.cpp:336</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln336">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:336</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln348">Serialization.cpp:348</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln348">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:348</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln360">Serialization.cpp:360</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln360">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:360</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2506/">V2506</td>
+      <td id="col_message">A function should have a single point of exit at the end.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln134">Serialization.cpp:134</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln134">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:134</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln135">Serialization.cpp:135</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln135">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:135</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln290">Serialization.cpp:290</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln290">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:290</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln297">Serialization.cpp:297</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln297">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:297</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln304">Serialization.cpp:304</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln304">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:304</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln320">Serialization.cpp:320</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln320">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:320</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'insert' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln331">Serialization.cpp:331</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln331">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:331</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'memcpy' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln343">Serialization.cpp:343</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln343">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:343</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'memcpy' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln355">Serialization.cpp:355</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln355">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:355</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'memcpy' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln374">Serialization.cpp:374</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln374">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:374</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2547/">V2547</td>
+      <td id="col_message">The return value of non-void function 'assign' should be used.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln290">Serialization.cpp:290</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln290">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:290</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln297">Serialization.cpp:297</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln297">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:297</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln304">Serialization.cpp:304</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln304">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:304</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln331">Serialization.cpp:331</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln331">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:331</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln343">Serialization.cpp:343</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln343">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:343</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln355">Serialization.cpp:355</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln355">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:355</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+    <tr>
+      <td id="col_group">MISRA</td>
+      <td id="col_file"><a target="_blank" class="file-link" href="sources/Serialization.cpp_1.html#ln374">Serialization.cpp:374</a><a target="_blank" class="file-link display-none" href="sources/Serialization.cpp_1.html#ln374">/Users/henil23/Desktop/Software_Reliability_Grp6/CSCN74000_Shared/Serialization.cpp:374</a></td>
+      <td id="col_level" style="color:#FF0000"><b>High</b></td>
+      <td id="col_code"><a target="_blank" href="https://pvs-studio.com/en/docs/warnings/v2563/">V2563</td>
+      <td id="col_message">Array indexing should be the only form of pointer arithmetic and it should be applied only to objects defined as an array type.</td>
+    </tr>
+  </table>
+<script type="text/javascript">
+var sorter=new table.sorter("sorter");
+sorter.init("sorter",0);
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@
 
 namespace Shared
 {
+    // Identifies the purpose of each packet exchanged in the system.
     enum class PacketType : std::uint32_t
     {
         UNKNOWN = 0,

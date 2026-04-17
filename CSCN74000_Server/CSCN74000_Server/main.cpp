@@ -1,6 +1,6 @@
 #include <iostream>
 #include "Server.h"
-
+// server startup application
 int main()
 {
     Server server;
